@@ -83,6 +83,7 @@ extern int curr_log_level_framer;
 extern int curr_log_level_6top;
 extern int curr_log_level_coap;
 extern int curr_log_level_snmp;
+extern int curr_log_level_comp;
 extern int curr_log_level_lwm2m;
 extern int curr_log_level_main;
 
@@ -98,53 +99,54 @@ extern struct log_module all_modules[];
 #define LOG_LEVEL_6TOP                        MIN((LOG_CONF_LEVEL_6TOP), curr_log_level_6top)
 #define LOG_LEVEL_COAP                        MIN((LOG_CONF_LEVEL_COAP), curr_log_level_coap)
 #define LOG_LEVEL_SNMP                        MIN((LOG_CONF_LEVEL_SNMP), curr_log_level_snmp)
+#define LOG_LEVEL_COMP                        MIN((LOG_CONF_LEVEL_COMP), curr_log_level_comp)
 #define LOG_LEVEL_LWM2M                       MIN((LOG_CONF_LEVEL_LWM2M), curr_log_level_lwm2m)
 #define LOG_LEVEL_MAIN                        MIN((LOG_CONF_LEVEL_MAIN), curr_log_level_main)
 
 /* Main log function */
 
-#define LOG(newline, level, levelstr, ...) do {  \
-                            if(level <= (LOG_LEVEL)) { \
-                              if(newline) { \
-                                if(LOG_WITH_MODULE_PREFIX) { \
-                                  LOG_OUTPUT_PREFIX(level, levelstr, LOG_MODULE); \
-                                } \
-                                if(LOG_WITH_LOC) { \
-                                  LOG_OUTPUT("[%s: %d] ", __FILE__, __LINE__); \
-                                } \
-                              } \
-                              LOG_OUTPUT(__VA_ARGS__); \
-                            } \
-                          } while (0)
+#define LOG(newline, level, levelstr, ...) do { \
+    if(level <= (LOG_LEVEL)) { \
+      if(newline) { \
+        if(LOG_WITH_MODULE_PREFIX) { \
+          LOG_OUTPUT_PREFIX(level, levelstr, LOG_MODULE); \
+        } \
+        if(LOG_WITH_LOC) { \
+          LOG_OUTPUT("[%s: %d] ", __FILE__, __LINE__); \
+        } \
+      } \
+      LOG_OUTPUT(__VA_ARGS__); \
+    } \
+} while(0)
 
 /* For Cooja annotations */
-#define LOG_ANNOTATE(...) do {  \
-                            if(LOG_WITH_ANNOTATE) { \
-                              LOG_OUTPUT(__VA_ARGS__); \
-                            } \
-                        } while (0)
+#define LOG_ANNOTATE(...) do { \
+    if(LOG_WITH_ANNOTATE) { \
+      LOG_OUTPUT(__VA_ARGS__); \
+    } \
+} while(0)
 
 /* Link-layer address */
-#define LOG_LLADDR(level, lladdr) do {  \
-                            if(level <= (LOG_LEVEL)) { \
-                              if(LOG_WITH_COMPACT_ADDR) { \
-                                log_lladdr_compact(lladdr); \
-                              } else { \
-                                log_lladdr(lladdr); \
-                              } \
-                            } \
-                        } while (0)
+#define LOG_LLADDR(level, lladdr) do { \
+    if(level <= (LOG_LEVEL)) { \
+      if(LOG_WITH_COMPACT_ADDR) { \
+        log_lladdr_compact(lladdr); \
+      } else { \
+        log_lladdr(lladdr); \
+      } \
+    } \
+} while(0)
 
 /* IPv6 address */
-#define LOG_6ADDR(level, ipaddr) do {  \
-                           if(level <= (LOG_LEVEL)) { \
-                             if(LOG_WITH_COMPACT_ADDR) { \
-                               log_6addr_compact(ipaddr); \
-                             } else { \
-                               log_6addr(ipaddr); \
-                             } \
-                           } \
-                         } while (0)
+#define LOG_6ADDR(level, ipaddr) do { \
+    if(level <= (LOG_LEVEL)) { \
+      if(LOG_WITH_COMPACT_ADDR) { \
+        log_6addr_compact(ipaddr); \
+      } else { \
+        log_6addr(ipaddr); \
+      } \
+    } \
+} while(0)
 
 /* More compact versions of LOG macros */
 #define LOG_PRINT(...)         LOG(1, 0, "PRI", __VA_ARGS__)
@@ -187,13 +189,13 @@ extern struct log_module all_modules[];
 /**
  * Logs an IPv6 address
  * \param ipaddr The IPv6 address
-*/
+ */
 void log_6addr(const uip_ipaddr_t *ipaddr);
 
 /**
  * Logs an IPv6 address with a compact format
  * \param ipaddr The IPv6 address
-*/
+ */
 void log_6addr_compact(const uip_ipaddr_t *ipaddr);
 
 /**
@@ -212,13 +214,13 @@ int log_6addr_compact_snprint(char *buf, size_t size, const uip_ipaddr_t *ipaddr
 /**
  * Logs a link-layer address
  * \param lladdr The link-layer address
-*/
+ */
 void log_lladdr(const linkaddr_t *lladdr);
 
 /**
  * Logs a link-layer address with a compact format
  * \param lladdr The link-layer address
-*/
+ */
 void log_lladdr_compact(const linkaddr_t *lladdr);
 
 /**
@@ -227,21 +229,21 @@ void log_lladdr_compact(const linkaddr_t *lladdr);
  * levels, system-wide.
  * \param module The target module string descriptor
  * \param level The log level
-*/
+ */
 void log_set_level(const char *module, int level);
 
 /**
  * Returns the current log level.
  * \param module The target module string descriptor
  * \return The current log level
-*/
+ */
 int log_get_level(const char *module);
 
 /**
  * Returns a textual description of a log level
  * \param level log level
  * \return The textual description
-*/
+ */
 const char *log_level_to_str(int level);
 
 #endif /* __LOG_H__ */
