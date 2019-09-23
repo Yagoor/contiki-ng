@@ -51,6 +51,7 @@
 #include "net/queuebuf.h"
 #include "net/app-layer/coap/coap-engine.h"
 #include "net/app-layer/snmp/snmp.h"
+#include "net/app-layer/comp/comp.h"
 #include "services/rpl-border-router/rpl-border-router.h"
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
@@ -152,6 +153,11 @@ main(void)
   snmp_init();
   LOG_DBG("With SNMP\n");
 #endif /* BUILD_WITH_SNMP */
+
+#if BUILD_WITH_COMP
+  comp_init();
+  LOG_DBG("With CoMP\n");
+#endif /* BUILD_WITH_COMP */
 
 #if BUILD_WITH_SIMPLE_ENERGEST
   simple_energest_init();

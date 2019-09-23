@@ -1,0 +1,1 @@
+#define BUILD_WITH_COMP 1
