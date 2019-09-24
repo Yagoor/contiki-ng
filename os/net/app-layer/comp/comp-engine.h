@@ -29,42 +29,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "comp-api.h"
 
-#include <string.h>
-#include <strings.h>
+/**
+ * \addtogroup comp
+ * @{
+ */
 
-/*---------------------------------------------------------------------------*/
-PROCESS_NAME(comp_server_process);
-AUTOSTART_PROCESSES(&comp_server_process);
-/*---------------------------------------------------------------------------*/
+#ifndef COMP_ENGINE_H_
+#define COMP_ENGINE_H_
 
-extern comp_mib_resource_t
-  sysDescr,
-  sysObjectID,
-  sysUpTime,
-  sysContact,
-  sysName,
-  sysLocation,
-  sysServices;
-/*---------------------------------------------------------------------------*/
-PROCESS(comp_server_process, "COMP Server");
+#include "comp.h"
+#include "cbor.h"
 
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(comp_server_process, ev, data)
-{
+int
+comp_engine(uint8_t *buff, uint32_t buff_len, uint8_t *buffer, uint32_t *buffer_len);
 
-  PROCESS_BEGIN();
+#endif /* COMP_ENGINE_H_ */
 
-  comp_api_add_resource(&sysDescr);
-  comp_api_add_resource(&sysObjectID);
-  comp_api_add_resource(&sysUpTime);
-  comp_api_add_resource(&sysContact);
-  comp_api_add_resource(&sysName);
-  comp_api_add_resource(&sysLocation);
-  comp_api_add_resource(&sysServices);
+/** @} */
 
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/

@@ -29,42 +29,57 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*---------------------------------------------------------------------------*/
-#include "contiki.h"
-#include "comp-api.h"
 
-#include <string.h>
-#include <strings.h>
+/**
+ * \file
+ *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
+ * \author
+ *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
+ */
 
-/*---------------------------------------------------------------------------*/
-PROCESS_NAME(comp_server_process);
-AUTOSTART_PROCESSES(&comp_server_process);
-/*---------------------------------------------------------------------------*/
+/**
+ * \addtogroup comp
+ * @{
+ */
 
-extern comp_mib_resource_t
-  sysDescr,
-  sysObjectID,
-  sysUpTime,
-  sysContact,
-  sysName,
-  sysLocation,
-  sysServices;
-/*---------------------------------------------------------------------------*/
-PROCESS(comp_server_process, "COMP Server");
+#ifndef COMP_OID_H_
+#define COMP_OID_H_
 
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(comp_server_process, ev, data)
-{
+#include "comp.h"
+#include "cbor.h"
 
-  PROCESS_BEGIN();
+/**
+ * @brief Compares to oids
+ *
+ * @param oid1 First Oid
+ * @param oid2 Second Oid
+ *
+ * @return < 0 if oid1 < oid2, > 0 if oid1 > oid2 and 0 if they are equal
+ */
+int
+comp_oid_cmp_oid(uint32_t *oid1, uint32_t *oid2);
 
-  comp_api_add_resource(&sysDescr);
-  comp_api_add_resource(&sysObjectID);
-  comp_api_add_resource(&sysUpTime);
-  comp_api_add_resource(&sysContact);
-  comp_api_add_resource(&sysName);
-  comp_api_add_resource(&sysLocation);
-  comp_api_add_resource(&sysServices);
+/**
+ * @brief Copies a Oid
+ *
+ * @param dst A pointer to the destination array
+ * @param src A pointer to the source array
+ */
+void
+comp_oid_copy(uint32_t *dst, uint32_t *src);
 
-  PROCESS_END();
-}
-/*---------------------------------------------------------------------------*/
+/* #if LOG_LEVEL == LOG_LEVEL_DBG */
+/**
+ * @brief Prints a oid
+ *
+ * @param oid A oid
+ */
+void
+comp_oid_print(uint32_t *oid);
+/* #endif / * LOG_LEVEL == LOG_LEVEL_DBG * / */
+
+int
+comp_oid_decode(CborValue *it, uint32_t *dst);
+
+#endif /* COMP_OID_H_ */
+/** @} */

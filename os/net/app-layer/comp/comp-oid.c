@@ -32,88 +32,110 @@
 
 /**
  * \file
- *      The Contiki-NG COMP implementation
+ *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
 
 #include "contiki.h"
-#include "contiki-net.h"
 
 #include "comp.h"
-#include "cbor.h"
-#include "comp-mib.h"
-#include "comp-engine.h"
+#include "comp-oid.h"
 
 #include "sys/log.h"
-#define LOG_MODULE "COMP"
+#define LOG_MODULE "COMP [oid]"
 #define LOG_LEVEL LOG_LEVEL_COMP
 
 /*---------------------------------------------------------------------------*/
-#define COMP_SERVER_PORT UIP_HTONS(COMP_PORT)
-PROCESS(comp_process, "COMP Process");
 
-static struct uip_udp_conn *comp_udp_conn = NULL;
-
-/*---------------------------------------------------------------------------*/
-static void
-comp_process_data(void)
+int
+comp_oid_cmp_oid(uint32_t *oid1, uint32_t *oid2)
 {
-  static uint8_t packet[COMP_MAX_PACKET_SIZE];
-  static uint32_t packet_length;
+  uint8_t i;
 
-  LOG_DBG("receiving UDP datagram from [");
-  LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
-  LOG_DBG_(" Length: %u\n", uip_datalen());
-
-  /*
-   * Handle the request
-   */
-  if(!comp_engine(uip_appdata, uip_datalen(), packet, &packet_length)) {
-    LOG_DBG("Error while handling the request\n");
-  } else {
-    LOG_DBG("Sending response\n");
-
-    /*
-     * Send the response
-     */
-    LOG_DBG("%lu\n", (unsigned long)packet_length);
-    uip_udp_packet_sendto(comp_udp_conn, packet, packet_length, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
-  }
-}
-/*---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*/
-void
-comp_init()
-{
-  comp_mib_init();
-  process_start(&comp_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(comp_process, ev, data)
-{
-  PROCESS_BEGIN();
-
-  /* new connection with remote host */
-  comp_udp_conn = udp_new(NULL, 0, NULL);
-  udp_bind(comp_udp_conn, COMP_SERVER_PORT);
-  LOG_DBG("Listening on port %u\n", uip_ntohs(comp_udp_conn->lport));
-
-  while(1) {
-    PROCESS_YIELD();
-
-    if(ev == tcpip_event) {
-      if(uip_newdata()) {
-        comp_process_data();
+  i = 0;
+  while(oid1[i] != ((uint32_t)-1) &&
+        oid2[i] != ((uint32_t)-1)) {
+    if(oid1[i] != oid2[i]) {
+      if(oid1[i] < oid2[i]) {
+        return -1;
       }
+      return 1;
     }
-  }      /* while (1) */
+    i++;
+  }
 
-  PROCESS_END();
+  if(oid1[i] == ((uint32_t)-1) &&
+     oid2[i] != ((uint32_t)-1)) {
+    return -1;
+  }
+
+  if(oid1[i] != ((uint32_t)-1) &&
+     oid2[i] == ((uint32_t)-1)) {
+    return 1;
+  }
+
+  return 0;
 }
-
 /*---------------------------------------------------------------------------*/
+
+int
+comp_oid_decode(CborValue *it, uint32_t *dst)
+{
+  int i;
+  uint64_t result;
+
+  i = 0;
+  while(!cbor_value_at_end(it)) {
+    if(!cbor_value_is_unsigned_integer(it) ||
+       cbor_value_get_uint64(it, &result) != CborNoError) {
+      return 0;
+    }
+    dst[i++] = result;
+
+    if(cbor_value_advance_fixed(it) != CborNoError) {
+      return 0;
+    }
+  }
+
+  dst[i++] = -1;
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+
+void
+comp_oid_copy(uint32_t *dst, uint32_t *src)
+{
+  uint8_t i;
+
+  i = 0;
+  while(src[i] != ((uint32_t)-1)) {
+    dst[i] = src[i];
+    i++;
+  }
+  /*
+   * Copy the "null" terminator
+   */
+  dst[i] = src[i];
+}
+/*---------------------------------------------------------------------------*/
+
+/* #if LOG_LEVEL == LOG_LEVEL_DBG */
+void
+comp_oid_print(uint32_t *oid)
+{
+  uint8_t i;
+
+  i = 0;
+  LOG_DBG("{");
+  while(oid[i] != ((uint32_t)-1)) {
+    LOG_DBG_("%lu", (unsigned long)oid[i]);
+    i++;
+    if(oid[i] != ((uint32_t)-1)) {
+      LOG_DBG_(".");
+    }
+  }
+  LOG_DBG_("}\n");
+}
+/* #endif / * LOG_LEVEL == LOG_LEVEL_DBG  * / */
