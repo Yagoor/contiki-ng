@@ -32,88 +32,95 @@
 
 /**
  * \file
- *      The Contiki-NG COMP implementation
+ *      The Contiki-NG COMP implementation mib
  * \author
  *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
  */
 
 #include "contiki.h"
-#include "contiki-net.h"
 
-#include "comp.h"
-#include "cbor.h"
 #include "comp-mib.h"
-#include "comp-engine.h"
+#include "comp-oid.h"
+#include "lib/list.h"
 
 #include "sys/log.h"
-#define LOG_MODULE "COMP"
+#define LOG_MODULE "COMP [mib]"
 #define LOG_LEVEL LOG_LEVEL_COMP
-
 /*---------------------------------------------------------------------------*/
-#define COMP_SERVER_PORT UIP_HTONS(COMP_PORT)
-PROCESS(comp_process, "COMP Process");
 
-static struct uip_udp_conn *comp_udp_conn = NULL;
-
+LIST(comp_mib);
 /*---------------------------------------------------------------------------*/
-static void
-comp_process_data(void)
+
+comp_mib_resource_t *
+comp_mib_find(uint32_t *oid)
 {
-  static uint8_t packet[COMP_MAX_PACKET_SIZE];
-  static uint32_t packet_length;
+  comp_mib_resource_t *resource;
 
-  LOG_DBG("receiving UDP datagram from [");
-  LOG_DBG_6ADDR(&UIP_IP_BUF->srcipaddr);
-  LOG_DBG_("]:%u", uip_ntohs(UIP_UDP_BUF->srcport));
-  LOG_DBG_(" Length: %u\n", uip_datalen());
+  resource = NULL;
+  for(resource = list_head(comp_mib);
+      resource; resource = resource->next) {
 
-  /*
-   * Handle the request
-   */
-  if(!comp_engine(uip_appdata, uip_datalen(), packet, &packet_length)) {
-    LOG_DBG("Error while handling the request\n");
-  } else {
-    LOG_DBG("Sending response\n");
-
-    /*
-     * Send the response
-     */
-    LOG_DBG("%lu\n", (unsigned long)packet_length);
-    uip_udp_packet_sendto(comp_udp_conn, packet, packet_length, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
-  }
-}
-/*---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*/
-void
-comp_init()
-{
-  comp_mib_init();
-  process_start(&comp_process, NULL);
-}
-/*---------------------------------------------------------------------------*/
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(comp_process, ev, data)
-{
-  PROCESS_BEGIN();
-
-  /* new connection with remote host */
-  comp_udp_conn = udp_new(NULL, 0, NULL);
-  udp_bind(comp_udp_conn, COMP_SERVER_PORT);
-  LOG_DBG("Listening on port %u\n", uip_ntohs(comp_udp_conn->lport));
-
-  while(1) {
-    PROCESS_YIELD();
-
-    if(ev == tcpip_event) {
-      if(uip_newdata()) {
-        comp_process_data();
-      }
+    if(!comp_oid_cmp_oid(oid, resource->oid)) {
+      return resource;
     }
-  }      /* while (1) */
+  }
 
-  PROCESS_END();
+  return NULL;
 }
-
 /*---------------------------------------------------------------------------*/
+
+comp_mib_resource_t *
+comp_mib_find_next(uint32_t *oid)
+{
+  comp_mib_resource_t *resource;
+
+  resource = NULL;
+  for(resource = list_head(comp_mib);
+      resource; resource = resource->next) {
+
+    if(comp_oid_cmp_oid(resource->oid, oid) > 0) {
+      return resource;
+    }
+  }
+
+  return NULL;
+}
+/*---------------------------------------------------------------------------*/
+
+void
+comp_mib_add(comp_mib_resource_t *new_resource)
+{
+  comp_mib_resource_t *resource;
+
+  for(resource = list_head(comp_mib);
+      resource; resource = resource->next) {
+
+    if(comp_oid_cmp_oid(resource->oid, new_resource->oid) > 0) {
+      break;
+    }
+  }
+  if(resource == NULL) {
+    list_add(comp_mib, new_resource);
+  } else {
+    list_insert(comp_mib, new_resource, resource);
+  }
+
+#if LOG_LEVEL == LOG_LEVEL_DBG
+  /*
+   * We print the entire resource table
+   */
+  LOG_DBG("Table after insert.\n");
+  for(resource = list_head(comp_mib);
+      resource; resource = resource->next) {
+
+    comp_oid_print(resource->oid);
+  }
+#endif /* LOG_LEVEL == LOG_LEVEL_DBG  */
+}
+/*---------------------------------------------------------------------------*/
+
+void
+comp_mib_init(void)
+{
+  list_init(comp_mib);
+}
