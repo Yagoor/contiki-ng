@@ -85,7 +85,7 @@ comp_engine_decompress_oids(comp_message_t *message)
 }
 /*---------------------------------------------------------------------------*/
 int
-comp_engine_encode_with_oids_and_values(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
+comp_engine_encode(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len, uint8_t with_oids)
 {
   CborEncoder encoder, array, data, oid;
   uint8_t i, j;
@@ -110,100 +110,46 @@ comp_engine_encode_with_oids_and_values(comp_message_t *message, CborValue *valu
 
   cbor_encoder_create_array(&encoder, &array, message->pdu.data_length);
   for(i = 0; i < message->pdu.data_length; i++) {
-    cbor_encoder_create_array(&array, &data, 2);
+    if(with_oids) {
+      cbor_encoder_create_array(&array, &data, 2);
 
-    for(j = 0; message->pdu.data[i].oid[j] != -1; j++) {
-    }
-    cbor_encoder_create_array(&data, &oid, j);
-    for(j = 0; message->pdu.data[i].oid[j] != -1; j++) {
-      cbor_encode_uint(&oid, message->pdu.data[i].oid[j]);
-    }
-    cbor_encoder_close_container(&data, &oid);
-
-    switch(message->pdu.data[i].value_type) {
-    case COMP_TYPE_INTEGER:
-      cbor_encode_uint(&data, message->pdu.data[i].value.integer);
-      break;
-    case COMP_TYPE_STRING:
-      cbor_encode_text_string(&data, message->pdu.data[i].value.string.string, message->pdu.data[i].value.string.length);
-      break;
-    case COMP_TYPE_OID:
-      for(j = 0; message->pdu.data[i].value.oid[j] != -1; j++) {
+      for(j = 0; message->pdu.data[i].oid[j] != -1; j++) {
       }
       cbor_encoder_create_array(&data, &oid, j);
-      for(j = 0; message->pdu.data[i].value.oid[j] != -1; j++) {
-        cbor_encode_uint(&oid, message->pdu.data[i].value.oid[j]);
+      for(j = 0; message->pdu.data[i].oid[j] != -1; j++) {
+        cbor_encode_uint(&oid, message->pdu.data[i].oid[j]);
       }
       cbor_encoder_close_container(&data, &oid);
-      break;
-    case COMP_TYPE_NO_SUCH_INSTANCE:
-      cbor_encode_tag(&data, 280);
-      cbor_encode_uint(&data, SNMP_NO_SUCH_INSTANCE);
-      break;
-    case SNMP_TYPE_END_OF_MIB_VIEW:
-      cbor_encode_tag(&data, 280);
-      cbor_encode_uint(&data, SNMP_END_OF_MIB_VIEW);
-      break;
     }
-    cbor_encoder_close_container(&array, &data);
-  }
-  cbor_encoder_close_container(&encoder, &array);
 
-  (*buffer_len) += cbor_encoder_get_buffer_size(&encoder, buffer + *buffer_len);
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-
-int
-comp_engine_encode_with_values(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
-{
-  CborEncoder encoder, array, oid;
-  uint8_t i, j;
-
-  *buffer_len = 0;
-
-  buffer[0] = 0x00;
-  buffer[0] |= COMP_VERSION_MASK & (message->header.version << COMP_VERSION_POSITION);
-  buffer[0] |= COMP_OPERATION_MASK & (COMP_PDU_RESPONSE << COMP_OPERATION_POSITION);
-  (*buffer_len)++;
-
-  buffer[1] = 0x00;
-  buffer[1] = message->header.request_id;
-  (*buffer_len)++;
-
-  buffer[2] = 0x00;
-  buffer[2] |= COMP_ERROR_CODE_MASK & (message->header.comp_extra_headers.compv1_v2_extra_header.error_code << COMP_ERROR_CODE_POSITION);
-  buffer[2] |= COMP_ERROR_INDEX_MASK & (message->header.comp_extra_headers.compv1_v2_extra_header.error_index << COMP_ERROR_INDEX_POSITION);
-  (*buffer_len)++;
-
-  cbor_encoder_init(&encoder, buffer + *buffer_len, COMP_MAX_PACKET_SIZE - *buffer_len, 0);
-
-  cbor_encoder_create_array(&encoder, &array, message->pdu.data_length);
-  for(i = 0; i < message->pdu.data_length; i++) {
     switch(message->pdu.data[i].value_type) {
     case COMP_TYPE_INTEGER:
-      cbor_encode_uint(&array, message->pdu.data[i].value.integer);
+      cbor_encode_uint(with_oids ? &data : &array, message->pdu.data[i].value.integer);
       break;
     case COMP_TYPE_STRING:
-      cbor_encode_text_string(&array, message->pdu.data[i].value.string.string, message->pdu.data[i].value.string.length);
+      cbor_encode_text_string(with_oids ? &data : &array, message->pdu.data[i].value.string.string, message->pdu.data[i].value.string.length);
       break;
     case COMP_TYPE_OID:
       for(j = 0; message->pdu.data[i].value.oid[j] != -1; j++) {
       }
-      cbor_encoder_create_array(&array, &oid, j);
+      cbor_encoder_create_array(with_oids ? &data : &array, &oid, j);
       for(j = 0; message->pdu.data[i].value.oid[j] != -1; j++) {
         cbor_encode_uint(&oid, message->pdu.data[i].value.oid[j]);
       }
-      cbor_encoder_close_container(&array, &oid);
+      cbor_encoder_close_container(with_oids ? &data : &array, &oid);
       break;
     case COMP_TYPE_NO_SUCH_INSTANCE:
-      cbor_encode_tag(&array, 280);
-      cbor_encode_uint(&array, SNMP_NO_SUCH_INSTANCE);
+      cbor_encode_tag(with_oids ? &data : &array, 280);
+      cbor_encode_uint(with_oids ? &data : &array, SNMP_NO_SUCH_INSTANCE);
       break;
     case SNMP_TYPE_END_OF_MIB_VIEW:
-      cbor_encode_tag(&array, 280);
-      cbor_encode_uint(&array, SNMP_END_OF_MIB_VIEW);
+      cbor_encode_tag(with_oids ? &data : &array, 280);
+      cbor_encode_uint(with_oids ? &data : &array, SNMP_END_OF_MIB_VIEW);
       break;
+    }
+
+    if(with_oids) {
+      cbor_encoder_close_container(&array, &data);
     }
   }
   cbor_encoder_close_container(&encoder, &array);
@@ -266,14 +212,8 @@ comp_engine_decode_pdu(comp_message_t *message, CborValue *value)
 }
 /*---------------------------------------------------------------------------*/
 
-typedef int (*comp_engine_encode)(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len);
-/*---------------------------------------------------------------------------*/
-
-typedef comp_mib_resource_t * (*comp_engine_find)(uint32_t *oid);
-/*---------------------------------------------------------------------------*/
-
 int
-comp_engine_process(comp_engine_find find, comp_engine_encode encode, comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
+comp_engine_process(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len, uint8_t with_oids)
 {
   uint8_t i;
   comp_mib_resource_t *resource;
@@ -281,7 +221,7 @@ comp_engine_process(comp_engine_find find, comp_engine_encode encode, comp_messa
   comp_engine_decode_pdu(message, value);
 
   for(i = 0; i < message->pdu.data_length; i++) {
-    resource = find(message->pdu.data[i].oid);
+    resource = with_oids ? comp_mib_find_next(message->pdu.data[i].oid) : comp_mib_find(message->pdu.data[i].oid);
     if(!resource) {
       switch(message->header.version) {
       case COMP_VERSION_1:
@@ -301,12 +241,12 @@ comp_engine_process(comp_engine_find find, comp_engine_encode encode, comp_messa
     }
   }
 
-  return encode(message, value, buffer, buffer_len);
+  return comp_engine_encode(message, value, buffer, buffer_len, with_oids);
 }
 /*---------------------------------------------------------------------------*/
 
 int
-comp_engine_process_bulk(comp_engine_encode encode, comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
+comp_engine_process_bulk(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   comp_mib_resource_t *resource;
   uint8_t i, j, non_repeaters, max_repetitions, repeater, original_varbinds_length;
@@ -387,28 +327,28 @@ comp_engine_process_bulk(comp_engine_encode encode, comp_message_t *message, Cbo
     }
   }
 
-  return encode(message, value, buffer, buffer_len);
+  return comp_engine_encode(message, value, buffer, buffer_len, 1);
 }
 /*---------------------------------------------------------------------------*/
 
 int
 comp_engine_get(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
-  return comp_engine_process(comp_mib_find, comp_engine_encode_with_values, message, value, buffer, buffer_len);
+  return comp_engine_process(message, value, buffer, buffer_len, 0);
 }
 /*---------------------------------------------------------------------------*/
 
 int
 comp_engine_get_next(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
-  return comp_engine_process(comp_mib_find_next, comp_engine_encode_with_oids_and_values, message, value, buffer, buffer_len);
+  return comp_engine_process(message, value, buffer, buffer_len, 1);
 }
 /*---------------------------------------------------------------------------*/
 
 int
 comp_engine_get_bulk(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
-  return comp_engine_process_bulk(comp_engine_encode_with_oids_and_values, message, value, buffer, buffer_len);
+  return comp_engine_process_bulk(message, value, buffer, buffer_len);
 }
 /*---------------------------------------------------------------------------*/
 
