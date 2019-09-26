@@ -456,12 +456,13 @@ cbor_parser_init(const uint8_t *buffer, size_t size, uint32_t flags, CborParser 
  *
  * \sa cbor_value_validate(), cbor_value_advance()
  */
-CborError
-cbor_value_validate_basic(const CborValue *it)
-{
-  CborValue value = *it;
-  return cbor_value_advance(&value);
-}
+/* XXX */
+/* CborError */
+/* cbor_value_validate_basic(const CborValue *it) */
+/* { */
+/*  CborValue value = *it; */
+/*  return cbor_value_advance(&value); */
+/* } */
 /**
  * Advances the CBOR value \a it by one fixed-size position. Fixed-size types
  * are: integers, tags, simple types (including boolean, null and undefined
@@ -487,38 +488,39 @@ cbor_value_advance_fixed(CborValue *it)
   }
   return advance_internal(it);
 }
-static CborError
-advance_recursive(CborValue *it, int nestingLevel)
-{
-  CborError err;
-  CborValue recursed;
-
-  if(is_fixed_type(it->type)) {
-    return advance_internal(it);
-  }
-
-  if(!cbor_value_is_container(it)) {
-    size_t len = SIZE_MAX;
-    return _cbor_value_copy_string(it, NULL, &len, it);
-  }
-
-  /* map or array */
-  if(nestingLevel == 0) {
-    return CborErrorNestingTooDeep;
-  }
-
-  err = cbor_value_enter_container(it, &recursed);
-  if(err) {
-    return err;
-  }
-  while(!cbor_value_at_end(&recursed)) {
-    err = advance_recursive(&recursed, nestingLevel - 1);
-    if(err) {
-      return err;
-    }
-  }
-  return cbor_value_leave_container(it, &recursed);
-}
+/* XXX */
+/* static CborError */
+/* advance_recursive(CborValue *it, int nestingLevel) */
+/* { */
+/*  CborError err; */
+/*  CborValue recursed; */
+/*  */
+/*  if(is_fixed_type(it->type)) { */
+/*    return advance_internal(it); */
+/*  } */
+/*  */
+/*  if(!cbor_value_is_container(it)) { */
+/*    size_t len = SIZE_MAX; */
+/*    return _cbor_value_copy_string(it, NULL, &len, it); */
+/*  } */
+/*  */
+/*  / * map or array * / */
+/*  if(nestingLevel == 0) { */
+/*    return CborErrorNestingTooDeep; */
+/*  } */
+/*  */
+/*  err = cbor_value_enter_container(it, &recursed); */
+/*  if(err) { */
+/*    return err; */
+/*  } */
+/*  while(!cbor_value_at_end(&recursed)) { */
+/*    err = advance_recursive(&recursed, nestingLevel - 1); */
+/*    if(err) { */
+/*      return err; */
+/*    } */
+/*  } */
+/*  return cbor_value_leave_container(it, &recursed); */
+/* } */
 /**
  * Advances the CBOR value \a it by one element, skipping over containers.
  * Unlike cbor_value_advance_fixed(), this function can be called on a CBOR
@@ -533,15 +535,16 @@ advance_recursive(CborValue *it, int nestingLevel)
  *
  * \sa cbor_value_at_end(), cbor_value_advance_fixed(), cbor_value_enter_container(), cbor_value_leave_container()
  */
-CborError
-cbor_value_advance(CborValue *it)
-{
-  cbor_assert(it->type != CborInvalidType);
-  if(!it->remaining) {
-    return CborErrorAdvancePastEOF;
-  }
-  return advance_recursive(it, CBOR_PARSER_MAX_RECURSIONS);
-}
+/* XXX */
+/* CborError */
+/* cbor_value_advance(CborValue *it) */
+/* { */
+/*  cbor_assert(it->type != CborInvalidType); */
+/*  if(!it->remaining) { */
+/*    return CborErrorAdvancePastEOF; */
+/*  } */
+/*  return advance_recursive(it, CBOR_PARSER_MAX_RECURSIONS); */
+/* } */
 /**
  * \fn bool cbor_value_is_tag(const CborValue *value)
  *
@@ -1087,11 +1090,12 @@ iterate_noop(char *dest, const uint8_t *src, size_t len)
   (void)len;
   return true;
 }
-static uintptr_t
-iterate_memcmp(char *s1, const uint8_t *s2, size_t len)
-{
-  return memcmp(s1, (const char *)s2, len) == 0;
-}
+/* XXX */
+/* static uintptr_t */
+/* iterate_memcmp(char *s1, const uint8_t *s2, size_t len) */
+/* { */
+/*  return memcmp(s1, (const char *)s2, len) == 0; */
+/* } */
 static uintptr_t
 iterate_memcpy(char *dest, const uint8_t *src, size_t len)
 {
@@ -1241,23 +1245,24 @@ _cbor_value_copy_string(const CborValue *value, void *buffer,
  *
  * \sa cbor_value_skip_tag(), cbor_value_copy_text_string()
  */
-CborError
-cbor_value_text_string_equals(const CborValue *value, const char *string, bool *result)
-{
-  size_t len;
-  CborValue copy = *value;
-  CborError err = cbor_value_skip_tag(&copy);
-  if(err) {
-    return err;
-  }
-  if(!cbor_value_is_text_string(&copy)) {
-    *result = false;
-    return CborNoError;
-  }
-
-  len = strlen(string);
-  return iterate_string_chunks(&copy, CONST_CAST(char *, string), &len, result, NULL, iterate_memcmp);
-}
+/* XXX */
+/* CborError */
+/* cbor_value_text_string_equals(const CborValue *value, const char *string, bool *result) */
+/* { */
+/*  size_t len; */
+/*  CborValue copy = *value; */
+/*  CborError err = cbor_value_skip_tag(&copy); */
+/*  if(err) { */
+/*    return err; */
+/*  } */
+/*  if(!cbor_value_is_text_string(&copy)) { */
+/*    *result = false; */
+/*    return CborNoError; */
+/*  } */
+/*  */
+/*  len = strlen(string); */
+/*  return iterate_string_chunks(&copy, CONST_CAST(char *, string), &len, result, NULL, iterate_memcmp); */
+/* } */
 /**
  * \fn bool cbor_value_is_array(const CborValue *value)
  *
@@ -1330,61 +1335,62 @@ cbor_value_text_string_equals(const CborValue *value, const char *string, bool *
  *
  * \sa cbor_value_is_valid(), cbor_value_text_string_equals(), cbor_value_advance()
  */
-CborError
-cbor_value_map_find_value(const CborValue *map, const char *string, CborValue *element)
-{
-  CborError err;
-  size_t len = strlen(string);
-  cbor_assert(cbor_value_is_map(map));
-  err = cbor_value_enter_container(map, element);
-  if(err) {
-    goto error;
-  }
-
-  while(!cbor_value_at_end(element)) {
-    /* find the non-tag so we can compare */
-    err = cbor_value_skip_tag(element);
-    if(err) {
-      goto error;
-    }
-    if(cbor_value_is_text_string(element)) {
-      bool equals;
-      size_t dummyLen = len;
-      err = iterate_string_chunks(element, CONST_CAST(char *, string), &dummyLen,
-                                  &equals, element, iterate_memcmp);
-      if(err) {
-        goto error;
-      }
-      if(equals) {
-        return preparse_value(element);
-      }
-    } else {
-      /* skip this key */
-      err = cbor_value_advance(element);
-      if(err) {
-        goto error;
-      }
-    }
-
-    /* skip this value */
-    err = cbor_value_skip_tag(element);
-    if(err) {
-      goto error;
-    }
-    err = cbor_value_advance(element);
-    if(err) {
-      goto error;
-    }
-  }
-
-  /* not found */
-  element->type = CborInvalidType;
-  return CborNoError;
-
-error:
-  element->type = CborInvalidType;
-  return err;
-}
+/* XXX */
+/* CborError */
+/* cbor_value_map_find_value(const CborValue *map, const char *string, CborValue *element) */
+/* { */
+/*  CborError err; */
+/*  size_t len = strlen(string); */
+/*  cbor_assert(cbor_value_is_map(map)); */
+/*  err = cbor_value_enter_container(map, element); */
+/*  if(err) { */
+/*    goto error; */
+/*  } */
+/*  */
+/*  while(!cbor_value_at_end(element)) { */
+/*    / * find the non-tag so we can compare * / */
+/*    err = cbor_value_skip_tag(element); */
+/*    if(err) { */
+/*      goto error; */
+/*    } */
+/*    if(cbor_value_is_text_string(element)) { */
+/*      bool equals; */
+/*      size_t dummyLen = len; */
+/*      err = iterate_string_chunks(element, CONST_CAST(char *, string), &dummyLen, */
+/*                                  &equals, element, iterate_memcmp); */
+/*      if(err) { */
+/*        goto error; */
+/*      } */
+/*      if(equals) { */
+/*        return preparse_value(element); */
+/*      } */
+/*    } else { */
+/*      / * skip this key * / */
+/*      err = cbor_value_advance(element); */
+/*      if(err) { */
+/*        goto error; */
+/*      } */
+/*    } */
+/*  */
+/*    / * skip this value * / */
+/*    err = cbor_value_skip_tag(element); */
+/*    if(err) { */
+/*      goto error; */
+/*    } */
+/*    err = cbor_value_advance(element); */
+/*    if(err) { */
+/*      goto error; */
+/*    } */
+/*  } */
+/*  */
+/*  / * not found * / */
+/*  element->type = CborInvalidType; */
+/*  return CborNoError; */
+/*  */
+/* error: */
+/*  element->type = CborInvalidType; */
+/*  return err; */
+/* } */
 /**
  * \fn bool cbor_value_is_float(const CborValue *value)
  *
@@ -1449,15 +1455,16 @@ error:
  *
  * \sa cbor_value_get_type(), cbor_value_is_valid(), cbor_value_is_half_float(), cbor_value_get_float()
  */
-CborError
-cbor_value_get_half_float(const CborValue *value, void *result)
-{
-  uint16_t v;
-  cbor_assert(cbor_value_is_half_float(value));
-
-  /* size has been computed already */
-  v = get16(value->ptr + 1);
-  memcpy(result, &v, sizeof(v));
-  return CborNoError;
-}
+/* XXX */
+/* CborError */
+/* cbor_value_get_half_float(const CborValue *value, void *result) */
+/* { */
+/*  uint16_t v; */
+/*  cbor_assert(cbor_value_is_half_float(value)); */
+/*  */
+/*  / * size has been computed already * / */
+/*  v = get16(value->ptr + 1); */
+/*  memcpy(result, &v, sizeof(v)); */
+/*  return CborNoError; */
+/* } */
 /** @} */
