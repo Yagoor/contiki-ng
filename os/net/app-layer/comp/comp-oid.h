@@ -68,7 +68,7 @@ comp_oid_cmp_oid(uint32_t *oid1, uint32_t *oid2);
 void
 comp_oid_copy(uint32_t *dst, uint32_t *src);
 
-/* #if LOG_LEVEL == LOG_LEVEL_DBG */
+#if LOG_LEVEL == LOG_LEVEL_DBG
 /**
  * @brief Prints a oid
  *
@@ -76,7 +76,7 @@ comp_oid_copy(uint32_t *dst, uint32_t *src);
  */
 void
 comp_oid_print(uint32_t *oid);
-/* #endif / * LOG_LEVEL == LOG_LEVEL_DBG * / */
+#endif /* LOG_LEVEL == LOG_LEVEL_DBG */
 
 int
 comp_oid_decode(CborValue *it, uint32_t *dst);
