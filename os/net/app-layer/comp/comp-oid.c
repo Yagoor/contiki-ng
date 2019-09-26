@@ -121,7 +121,7 @@ comp_oid_copy(uint32_t *dst, uint32_t *src)
 }
 /*---------------------------------------------------------------------------*/
 
-/* #if LOG_LEVEL == LOG_LEVEL_DBG */
+#if LOG_LEVEL == LOG_LEVEL_DBG
 void
 comp_oid_print(uint32_t *oid)
 {
@@ -138,4 +138,4 @@ comp_oid_print(uint32_t *oid)
   }
   LOG_DBG_("}\n");
 }
-/* #endif / * LOG_LEVEL == LOG_LEVEL_DBG  * / */
+#endif /* LOG_LEVEL == LOG_LEVEL_DBG */
