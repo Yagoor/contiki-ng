@@ -191,15 +191,13 @@ comp_engine_decode_pdu(comp_message_t *message, CborValue *value)
       return 0;
     }
 
-    if(!comp_oid_decode(&oid, message->pdu.data[i].oid)) {
+    if(!comp_oid_decode(&oid, i < COMP_MAX_NR_VALUES ? message->pdu.data[i++].oid : NULL)) {
       return 0;
     }
 
     if(cbor_value_leave_container(&data, &oid) != CborNoError) {
       return 0;
     }
-
-    i++;
   }
 
   if(cbor_value_leave_container(value, &data) != CborNoError) {
