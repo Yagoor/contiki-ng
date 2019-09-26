@@ -341,26 +341,28 @@ cbor_encode_uint(CborEncoder *encoder, uint64_t value)
  *
  * \sa cbor_encode_uint, cbor_encode_int
  */
-CborError
-cbor_encode_negative_int(CborEncoder *encoder, uint64_t absolute_value)
-{
-  return encode_number(encoder, absolute_value - 1, NegativeIntegerType << MajorTypeShift);
-}
+/* XXX */
+/* CborError */
+/* cbor_encode_negative_int(CborEncoder *encoder, uint64_t absolute_value) */
+/* { */
+/*  return encode_number(encoder, absolute_value - 1, NegativeIntegerType << MajorTypeShift); */
+/* } */
 /**
  * Appends the signed 64-bit integer \a value to the CBOR stream provided by
  * \a encoder.
  *
  * \sa cbor_encode_negative_int, cbor_encode_uint
  */
-CborError
-cbor_encode_int(CborEncoder *encoder, int64_t value)
-{
-  /* adapted from code in RFC 7049 appendix C (pseudocode) */
-  uint64_t ui = value >> 63;                /* extend sign to whole length */
-  uint8_t majorType = ui & 0x20;            /* extract major type */
-  ui ^= value;                              /* complement negatives */
-  return encode_number(encoder, ui, majorType);
-}
+/* XXX */
+/* CborError */
+/* cbor_encode_int(CborEncoder *encoder, int64_t value) */
+/* { */
+/*  / * adapted from code in RFC 7049 appendix C (pseudocode) * / */
+/*  uint64_t ui = value >> 63;                / * extend sign to whole length * / */
+/*  uint8_t majorType = ui & 0x20;            / * extract major type * / */
+/*  ui ^= value;                              / * complement negatives * / */
+/*  return encode_number(encoder, ui, majorType); */
+/* } */
 /**
  * Appends the CBOR Simple Type of value \a value to the CBOR stream provided by
  * \a encoder.
@@ -368,17 +370,18 @@ cbor_encode_int(CborEncoder *encoder, int64_t value)
  * This function may return error CborErrorIllegalSimpleType if the \a value
  * variable contains a number that is not a valid simple type.
  */
-CborError
-cbor_encode_simple_value(CborEncoder *encoder, uint8_t value)
-{
-#ifndef CBOR_ENCODER_NO_CHECK_USER
-  /* check if this is a valid simple type */
-  if(value >= HalfPrecisionFloat && value <= Break) {
-    return CborErrorIllegalSimpleType;
-  }
-#endif
-  return encode_number(encoder, value, SimpleTypesType << MajorTypeShift);
-}
+/* XXX */
+/* CborError */
+/* cbor_encode_simple_value(CborEncoder *encoder, uint8_t value) */
+/* { */
+/* #ifndef CBOR_ENCODER_NO_CHECK_USER */
+/*  / * check if this is a valid simple type * / */
+/*  if(value >= HalfPrecisionFloat && value <= Break) { */
+/*    return CborErrorIllegalSimpleType; */
+/*  } */
+/* #endif */
+/*  return encode_number(encoder, value, SimpleTypesType << MajorTypeShift); */
+/* } */
 /**
  * Appends the floating-point value of type \a fpType and pointed to by \a
  * value to the CBOR stream provided by \a encoder. The value of \a fpType must
@@ -390,25 +393,26 @@ cbor_encode_simple_value(CborEncoder *encoder, uint8_t value)
  *
  * \sa cbor_encode_half_float, cbor_encode_float, cbor_encode_double
  */
-CborError
-cbor_encode_floating_point(CborEncoder *encoder, CborType fpType, const void *value)
-{
-  unsigned size;
-  uint8_t buf[1 + sizeof(uint64_t)];
-  cbor_assert(fpType == CborHalfFloatType || fpType == CborFloatType || fpType == CborDoubleType);
-  buf[0] = fpType;
-
-  size = 2U << (fpType - CborHalfFloatType);
-  if(size == 8) {
-    put64(buf + 1, *(const uint64_t *)value);
-  } else if(size == 4) {
-    put32(buf + 1, *(const uint32_t *)value);
-  } else {
-    put16(buf + 1, *(const uint16_t *)value);
-  }
-  saturated_decrement(encoder);
-  return append_to_buffer(encoder, buf, size + 1);
-}
+/* XXX */
+/* CborError */
+/* cbor_encode_floating_point(CborEncoder *encoder, CborType fpType, const void *value) */
+/* { */
+/*  unsigned size; */
+/*  uint8_t buf[1 + sizeof(uint64_t)]; */
+/*  cbor_assert(fpType == CborHalfFloatType || fpType == CborFloatType || fpType == CborDoubleType); */
+/*  buf[0] = fpType; */
+/*  */
+/*  size = 2U << (fpType - CborHalfFloatType); */
+/*  if(size == 8) { */
+/*    put64(buf + 1, *(const uint64_t *)value); */
+/*  } else if(size == 4) { */
+/*    put32(buf + 1, *(const uint32_t *)value); */
+/*  } else { */
+/*    put16(buf + 1, *(const uint16_t *)value); */
+/*  } */
+/*  saturated_decrement(encoder); */
+/*  return append_to_buffer(encoder, buf, size + 1); */
+/* } */
 /**
  * Appends the CBOR tag \a tag to the CBOR stream provided by \a encoder.
  *
@@ -528,14 +532,15 @@ cbor_encoder_create_array(CborEncoder *encoder, CborEncoder *arrayEncoder, size_
  *
  * \sa cbor_encoder_create_array
  */
-CborError
-cbor_encoder_create_map(CborEncoder *encoder, CborEncoder *mapEncoder, size_t length)
-{
-  if(length != CborIndefiniteLength && length > SIZE_MAX / 2) {
-    return CborErrorDataTooLarge;
-  }
-  return create_container(encoder, mapEncoder, length, MapType << MajorTypeShift);
-}
+/* XXX */
+/* CborError */
+/* cbor_encoder_create_map(CborEncoder *encoder, CborEncoder *mapEncoder, size_t length) */
+/* { */
+/*  if(length != CborIndefiniteLength && length > SIZE_MAX / 2) { */
+/*    return CborErrorDataTooLarge; */
+/*  } */
+/*  return create_container(encoder, mapEncoder, length, MapType << MajorTypeShift); */
+/* } */
 /**
  * Closes the CBOR container (array or map) provided by \a containerEncoder and
  * updates the CBOR stream provided by \a encoder. Both parameters must be the
