@@ -91,14 +91,18 @@ comp_oid_decode(CborValue *it, uint32_t *dst)
        cbor_value_get_uint64(it, &result) != CborNoError) {
       return 0;
     }
-    dst[i++] = result;
+    if(dst) {
+      dst[i++] = result;
+    }
 
     if(cbor_value_advance_fixed(it) != CborNoError) {
       return 0;
     }
   }
 
-  dst[i++] = -1;
+  if(dst) {
+    dst[i++] = -1;
+  }
 
   return 1;
 }

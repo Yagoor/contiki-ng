@@ -78,7 +78,6 @@ comp_process_data(void)
     /*
      * Send the response
      */
-    LOG_DBG("%lu\n", (unsigned long)packet_length);
     uip_udp_packet_sendto(comp_udp_conn, packet, packet_length, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
   }
 }
