@@ -48,7 +48,7 @@
 #define LOG_MODULE "COMP [engine]"
 #define LOG_LEVEL LOG_LEVEL_COMP
 
-static int
+int
 comp_engine_decompress_oids(comp_message_t *message)
 {
   uint8_t i, j, k;
@@ -84,7 +84,7 @@ comp_engine_decompress_oids(comp_message_t *message)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-static int
+int
 comp_engine_encode_with_oids_and_values(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   CborEncoder encoder, array, data, oid;
@@ -154,7 +154,7 @@ comp_engine_encode_with_oids_and_values(comp_message_t *message, CborValue *valu
 }
 /*---------------------------------------------------------------------------*/
 
-static int
+int
 comp_engine_encode_with_values(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   CborEncoder encoder, array, oid;
@@ -213,7 +213,7 @@ comp_engine_encode_with_values(comp_message_t *message, CborValue *value, uint8_
 }
 /*---------------------------------------------------------------------------*/
 
-int static
+int
 comp_engine_decode_pdu(comp_message_t *message, CborValue *value)
 {
   CborValue data;
@@ -272,7 +272,7 @@ typedef int (*comp_engine_encode)(comp_message_t *message, CborValue *value, uin
 typedef comp_mib_resource_t * (*comp_engine_find)(uint32_t *oid);
 /*---------------------------------------------------------------------------*/
 
-static int
+int
 comp_engine_process(comp_engine_find find, comp_engine_encode encode, comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   uint8_t i;
@@ -305,7 +305,7 @@ comp_engine_process(comp_engine_find find, comp_engine_encode encode, comp_messa
 }
 /*---------------------------------------------------------------------------*/
 
-static int
+int
 comp_engine_process_bulk(comp_engine_encode encode, comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   comp_mib_resource_t *resource;
@@ -391,21 +391,21 @@ comp_engine_process_bulk(comp_engine_encode encode, comp_message_t *message, Cbo
 }
 /*---------------------------------------------------------------------------*/
 
-static int
+int
 comp_engine_get(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   return comp_engine_process(comp_mib_find, comp_engine_encode_with_values, message, value, buffer, buffer_len);
 }
 /*---------------------------------------------------------------------------*/
 
-static int
+int
 comp_engine_get_next(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   return comp_engine_process(comp_mib_find_next, comp_engine_encode_with_oids_and_values, message, value, buffer, buffer_len);
 }
 /*---------------------------------------------------------------------------*/
 
-static int
+int
 comp_engine_get_bulk(comp_message_t *message, CborValue *value, uint8_t *buffer, uint32_t *buffer_len)
 {
   return comp_engine_process_bulk(comp_engine_encode_with_oids_and_values, message, value, buffer, buffer_len);
