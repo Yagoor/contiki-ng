@@ -451,11 +451,12 @@ encode_string(CborEncoder *encoder, size_t length, uint8_t shiftedMajorType, con
  *
  * \sa CborError cbor_encode_text_stringz, cbor_encode_byte_string
  */
-CborError
-cbor_encode_byte_string(CborEncoder *encoder, const uint8_t *string, size_t length)
-{
-  return encode_string(encoder, length, ByteStringType << MajorTypeShift, string);
-}
+/* XXX */
+/* CborError */
+/* cbor_encode_byte_string(CborEncoder *encoder, const uint8_t *string, size_t length) */
+/* { */
+/*  return encode_string(encoder, length, ByteStringType << MajorTypeShift, string); */
+/* } */
 /**
  * Appends the byte string \a string of length \a length to the CBOR stream
  * provided by \a encoder. CBOR byte strings are arbitrary raw data.
