@@ -52,8 +52,7 @@ struct cbor_token {
 
 uint8_t *
 cbor_read_token(uint8_t *data, struct cbor_token *token);
-uint8_t *
-cbor_write_type_size(uint8_t *data, uint32_t *size, uint8_t type, uint64_t type_size);
+#define cbor_write_type_size(data, size, type, type_size) cbor_write_type_size_bytes(data, size, type, NULL, type_size);
 uint8_t *
 cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const char *bytes, uint64_t type_size);
 
