@@ -41,7 +41,7 @@
 #include "contiki-net.h"
 
 #include "comp.h"
-#include "cbor.h"
+#include "comp-cbor.h"
 #include "comp-mib.h"
 #include "comp-engine.h"
 
