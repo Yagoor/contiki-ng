@@ -42,79 +42,28 @@ cbor_read_token(uint8_t *data, struct cbor_token *token)
   data++;
   uint8_t majorType = type >> 5;
   uint8_t minorType = type & 31;
-  uint32_t length = 0;
+  uint8_t length = 0;
 
   switch(majorType) {
-  case CBOR_TOKEN_TYPE_UNSIGNED:       /* positive integer */
+  case CBOR_TOKEN_TYPE_UNSIGNED:
+  case CBOR_TOKEN_TYPE_TEXT:
+  case CBOR_TOKEN_TYPE_ARRAY:
+  case CBOR_TOKEN_TYPE_TAG:
     if(minorType < 24) {
-      token->type = CBOR_TOKEN_TYPE_UNSIGNED;
+      token->type = majorType;
       token->integer = minorType;
-      return data;
-    } else if(minorType == 24) {         /* 1 byte */
-      token->type = CBOR_TOKEN_TYPE_UNSIGNED;
+    } else if(minorType == 24) {
+      token->type = majorType;
       length = 1;
-    } else if(minorType == 25) {         /* 2 byte */
-      token->type = CBOR_TOKEN_TYPE_UNSIGNED;
+    } else if(minorType == 25) {
+      token->type = majorType;
       length = 2;
-    } else if(minorType == 26) {         /* 4 byte */
-      token->type = CBOR_TOKEN_TYPE_UNSIGNED;
+    } else if(minorType == 26) {
+      token->type = majorType;
       length = 4;
-    } else if(minorType == 27) {         /* 8 byte */
-      token->type = CBOR_TOKEN_TYPE_UNSIGNED;
+    } else if(minorType == 27) {
+      token->type = majorType;
       length = 8;
-    } else {
-      return NULL;
-    }
-    break;
-  case CBOR_TOKEN_TYPE_TEXT:       /* string */
-    if(minorType < 24) {
-      token->type = CBOR_TOKEN_TYPE_TEXT;
-      token->integer = minorType;
-    } else if(minorType == 24) {
-      token->type = CBOR_TOKEN_TYPE_TEXT;
-      length = 1;
-    } else if(minorType == 25) {         /* 2 byte */
-      token->type = CBOR_TOKEN_TYPE_TEXT;
-      length = 2;
-    } else if(minorType == 26) {         /* 4 byte */
-      token->type = CBOR_TOKEN_TYPE_TEXT;
-      length = 4;
-    } else {
-      return NULL;
-    }
-    break;
-  case CBOR_TOKEN_TYPE_ARRAY:       /* array */
-    if(minorType < 24) {
-      token->type = CBOR_TOKEN_TYPE_ARRAY;
-      token->integer = minorType;
-      return data;
-    } else if(minorType == 24) {
-      token->type = CBOR_TOKEN_TYPE_ARRAY;
-      length = 1;
-    } else if(minorType == 25) {         /* 2 byte */
-      token->type = CBOR_TOKEN_TYPE_ARRAY;
-      length = 2;
-    } else if(minorType == 26) {         /* 4 byte */
-      token->type = CBOR_TOKEN_TYPE_ARRAY;
-      length = 4;
-    } else {
-      return NULL;
-    }
-    break;
-  case CBOR_TOKEN_TYPE_TAG:       /* tag */
-    if(minorType < 24) {
-      token->type = CBOR_TOKEN_TYPE_TAG;
-      token->integer = minorType;
-      return data;
-    } else if(minorType == 24) {
-      token->type = CBOR_TOKEN_TYPE_TAG;
-      length = 1;
-    } else if(minorType == 25) {         /* 2 byte */
-      token->type = CBOR_TOKEN_TYPE_TAG;
-      length = 2;
-    } else if(minorType == 26) {         /* 4 byte */
-      token->type = CBOR_TOKEN_TYPE_TAG;
-      length = 4;
     } else {
       return NULL;
     }
@@ -154,30 +103,38 @@ cbor_read_token(uint8_t *data, struct cbor_token *token)
     token->type = CBOR_TOKEN_TYPE_TEXT;
     token->string = (char *)(data);
     return data + token->integer;
-  case CBOR_TOKEN_TYPE_UNSIGNED:
-  case CBOR_TOKEN_TYPE_ARRAY:
-  case CBOR_TOKEN_TYPE_TAG:
-    return data;
-  default:
-    return NULL;
   }
+
+  return data;
 }
 uint8_t *
-cbor_write_type_size(uint8_t *data, uint32_t *size, uint8_t type, uint64_t type_size)
+cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const char *bytes, uint64_t type_size)
 {
   type <<= 5;
   if(type_size < 24) {
     *data++ = (uint8_t)(type | type_size);
     (*size)++;
 
-    return data;
+    if(bytes) {
+      memcpy(data, bytes, type_size);
+      (*size) += type_size;
+      return data + type_size;
+    } else {
+      return data;
+    }
   } else if(type_size < 256) {
     *data++ = (uint8_t)(type | 24);
     (*size)++;
     *data++ = (uint8_t)type_size;
     (*size)++;
 
-    return data;
+    if(bytes) {
+      memcpy(data, bytes, type_size);
+      (*size) += type_size;
+      return data + type_size;
+    } else {
+      return data;
+    }
   } else if(type_size < 65536) {
     *data++ = (uint8_t)(type | 25);
     (*size)++;
@@ -186,7 +143,13 @@ cbor_write_type_size(uint8_t *data, uint32_t *size, uint8_t type, uint64_t type_
     *data++ = (uint8_t)type_size;
     (*size)++;
 
-    return data;
+    if(bytes) {
+      memcpy(data, bytes, type_size);
+      (*size) += type_size;
+      return data + type_size;
+    } else {
+      return data;
+    }
   } else if(type_size < 4294967296) {
     *data++ = (uint8_t)(type | 26);
     (*size)++;
@@ -198,7 +161,14 @@ cbor_write_type_size(uint8_t *data, uint32_t *size, uint8_t type, uint64_t type_
     (*size)++;
     *data++ = (uint8_t)type_size;
     (*size)++;
-    return data;
+
+    if(bytes) {
+      memcpy(data, bytes, type_size);
+      (*size) += type_size;
+      return data + type_size;
+    } else {
+      return data;
+    }
   } else {
     *data++ = (uint8_t)(type | 27);
     (*size)++;
@@ -219,54 +189,5 @@ cbor_write_type_size(uint8_t *data, uint32_t *size, uint8_t type, uint64_t type_
     *data++ = (uint8_t)type_size;
     (*size)++;
     return data;
-  }
-}
-uint8_t *
-cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const char *bytes, uint64_t type_size)
-{
-  type <<= 5;
-  if(type_size < 24) {
-    *data++ = (uint8_t)(type | type_size);
-    (*size)++;
-    memcpy(data, bytes, type_size);
-    (*size) += type_size;
-
-    return data + type_size;
-  } else if(type_size < 256) {
-    *data++ = (uint8_t)(type | 24);
-    (*size)++;
-    *data++ = (uint8_t)type_size;
-    (*size)++;
-    memcpy(data, bytes, type_size);
-    (*size) += type_size;
-
-    return data + type_size;
-  } else if(type_size < 65536) {
-    *data++ = (uint8_t)(type | 25);
-    (*size)++;
-    *data++ = (uint8_t)(type_size >> 8);
-    (*size)++;
-    *data++ = (uint8_t)type_size;
-    (*size)++;
-    memcpy(data, bytes, type_size);
-    (*size) += type_size;
-
-    return data + type_size;
-  } else {
-    *data++ = (uint8_t)(type | 26);
-    (*size)++;
-    *data++ = (uint8_t)(type_size >> 24);
-    (*size)++;
-    *data++ = (uint8_t)(type_size >> 16);
-    (*size)++;
-    *data++ = (uint8_t)(type_size >> 8);
-    (*size)++;
-    *data++ = (uint8_t)type_size;
-    (*size)++;
-
-    memcpy(data, bytes, type_size);
-    (*size) += type_size;
-
-    return data + type_size;
   }
 }
