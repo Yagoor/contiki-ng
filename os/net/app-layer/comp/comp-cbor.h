@@ -28,55 +28,33 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
 
-/**
- * \file
- *      An implementation of the Simple Network Management Protocol (RFC 3411-3418)
- * \author
- *      Yago Fontoura do Rosario <yago.rosario@hotmail.com.br
- */
+#ifndef COMP_CBOR_H
+#define COMP_CBOR_H
 
-/**
- * \addtogroup comp
- * @{
- */
+#include <stdlib.h>
+#include <stdint.h>
 
-#ifndef COMP_OID_H_
-#define COMP_OID_H_
+#define CBOR_TOKEN_TYPE_UNSIGNED 0
+#define CBOR_TOKEN_TYPE_NEGATIVE 1
+#define CBOR_TOKEN_TYPE_BYTES 2
+#define CBOR_TOKEN_TYPE_TEXT 3
+#define CBOR_TOKEN_TYPE_ARRAY 4
+#define CBOR_TOKEN_TYPE_MAP 5
+#define CBOR_TOKEN_TYPE_TAG 6
+#define CBOR_TOKEN_TYPE_PRIMITIVE 7
 
-#include "comp.h"
-#include "comp-cbor.h"
+struct cbor_token {
+  int8_t type;
+  uint64_t integer;
+  char *string;
+};
 
-/**
- * @brief Compares to oids
- *
- * @param oid1 First Oid
- * @param oid2 Second Oid
- *
- * @return < 0 if oid1 < oid2, > 0 if oid1 > oid2 and 0 if they are equal
- */
-int
-comp_oid_cmp_oid(uint32_t *oid1, uint32_t *oid2);
+uint8_t *
+cbor_read_token(uint8_t *data, struct cbor_token *token);
+uint8_t *
+cbor_write_type_size(uint8_t *data, uint32_t *size, uint8_t type, uint64_t type_size);
+uint8_t *
+cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const char *bytes, uint64_t type_size);
 
-/**
- * @brief Copies a Oid
- *
- * @param dst A pointer to the destination array
- * @param src A pointer to the source array
- */
-void
-comp_oid_copy(uint32_t *dst, uint32_t *src);
-
-#if LOG_LEVEL == LOG_LEVEL_DBG
-/**
- * @brief Prints a oid
- *
- * @param oid A oid
- */
-void
-comp_oid_print(uint32_t *oid);
-#endif /* LOG_LEVEL == LOG_LEVEL_DBG */
-
-#endif /* COMP_OID_H_ */
-/** @} */
+#endif /* COMP_CBOR_H */

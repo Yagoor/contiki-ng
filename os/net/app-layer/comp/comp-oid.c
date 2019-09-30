@@ -79,35 +79,6 @@ comp_oid_cmp_oid(uint32_t *oid1, uint32_t *oid2)
 }
 /*---------------------------------------------------------------------------*/
 
-int
-comp_oid_decode(CborValue *it, uint32_t *dst)
-{
-  int i;
-  uint64_t result;
-
-  i = 0;
-  while(!cbor_value_at_end(it)) {
-    if(!cbor_value_is_unsigned_integer(it) ||
-       cbor_value_get_uint64(it, &result) != CborNoError) {
-      return 0;
-    }
-    if(dst) {
-      dst[i++] = result;
-    }
-
-    if(cbor_value_advance_fixed(it) != CborNoError) {
-      return 0;
-    }
-  }
-
-  if(dst) {
-    dst[i++] = -1;
-  }
-
-  return 1;
-}
-/*---------------------------------------------------------------------------*/
-
 void
 comp_oid_copy(uint32_t *dst, uint32_t *src)
 {

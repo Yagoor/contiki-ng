@@ -39,7 +39,7 @@
 #define COMP_ENGINE_H_
 
 #include "comp.h"
-#include "cbor.h"
+#include "comp-cbor.h"
 
 int
 comp_engine(uint8_t *buff, uint32_t buff_len, uint8_t *buffer, uint32_t *buffer_len);
