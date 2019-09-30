@@ -45,7 +45,6 @@
 #define CBOR_TOKEN_TYPE_PRIMITIVE 7
 
 struct cbor_token {
-  int8_t type;
   uint64_t integer;
   char *string;
 };

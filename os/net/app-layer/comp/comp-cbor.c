@@ -40,35 +40,26 @@ cbor_read_token(uint8_t *data, struct cbor_token *token)
 {
   uint8_t type = *data;
   data++;
-  uint8_t majorType = type >> 5;
-  uint8_t minorType = type & 31;
   uint8_t length = 0;
 
-  switch(majorType) {
-  case CBOR_TOKEN_TYPE_UNSIGNED:
-  case CBOR_TOKEN_TYPE_TEXT:
-  case CBOR_TOKEN_TYPE_ARRAY:
-  case CBOR_TOKEN_TYPE_TAG:
-    if(minorType < 24) {
-      token->type = majorType;
-      token->integer = minorType;
-    } else if(minorType == 24) {
-      token->type = majorType;
+  if(type >> 5 == CBOR_TOKEN_TYPE_UNSIGNED
+     || type >> 5 == CBOR_TOKEN_TYPE_TEXT
+     || type >> 5 == CBOR_TOKEN_TYPE_ARRAY
+     || type >> 5 == CBOR_TOKEN_TYPE_TAG) {
+    if((type & 31) < 24) {
+      token->integer = type & 31;
+    } else if((type & 31) == 24) {
       length = 1;
-    } else if(minorType == 25) {
-      token->type = majorType;
+    } else if((type & 31) == 25) {
       length = 2;
-    } else if(minorType == 26) {
-      token->type = majorType;
+    } else if((type & 31) == 26) {
       length = 4;
-    } else if(minorType == 27) {
-      token->type = majorType;
+    } else if((type & 31) == 27) {
       length = 8;
     } else {
       return NULL;
     }
-    break;
-  default:
+  } else {
     return NULL;
   }
 
@@ -98,9 +89,7 @@ cbor_read_token(uint8_t *data, struct cbor_token *token)
     }
   }
 
-  switch(majorType) {
-  case CBOR_TOKEN_TYPE_TEXT:
-    token->type = CBOR_TOKEN_TYPE_TEXT;
+  if(type >> 5 == CBOR_TOKEN_TYPE_TEXT) {
     token->string = (char *)(data);
     return data + token->integer;
   }
