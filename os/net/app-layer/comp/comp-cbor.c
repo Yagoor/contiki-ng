@@ -103,27 +103,11 @@ cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const c
   if(type_size < 24) {
     *data++ = (uint8_t)(type | type_size);
     (*size)++;
-
-    if(bytes) {
-      memcpy(data, bytes, type_size);
-      (*size) += type_size;
-      return data + type_size;
-    } else {
-      return data;
-    }
   } else if(type_size < 256) {
     *data++ = (uint8_t)(type | 24);
     (*size)++;
     *data++ = (uint8_t)type_size;
     (*size)++;
-
-    if(bytes) {
-      memcpy(data, bytes, type_size);
-      (*size) += type_size;
-      return data + type_size;
-    } else {
-      return data;
-    }
   } else if(type_size < 65536) {
     *data++ = (uint8_t)(type | 25);
     (*size)++;
@@ -131,14 +115,6 @@ cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const c
     (*size)++;
     *data++ = (uint8_t)type_size;
     (*size)++;
-
-    if(bytes) {
-      memcpy(data, bytes, type_size);
-      (*size) += type_size;
-      return data + type_size;
-    } else {
-      return data;
-    }
   } else if(type_size < 4294967296) {
     *data++ = (uint8_t)(type | 26);
     (*size)++;
@@ -150,14 +126,6 @@ cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const c
     (*size)++;
     *data++ = (uint8_t)type_size;
     (*size)++;
-
-    if(bytes) {
-      memcpy(data, bytes, type_size);
-      (*size) += type_size;
-      return data + type_size;
-    } else {
-      return data;
-    }
   } else {
     *data++ = (uint8_t)(type | 27);
     (*size)++;
@@ -177,6 +145,13 @@ cbor_write_type_size_bytes(uint8_t *data, uint32_t *size, uint32_t type, const c
     (*size)++;
     *data++ = (uint8_t)type_size;
     (*size)++;
+  }
+
+  if(bytes) {
+    memcpy(data, bytes, type_size);
+    (*size) += type_size;
+    return data + type_size;
+  } else {
     return data;
   }
 }
