@@ -84,10 +84,56 @@ comp_engine_decompress_oids(comp_message_t *message)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
+
+int
+comp_engine_compress_oids(comp_message_t *message)
+{
+  uint8_t i, j, k;
+  uint32_t oid[COMP_MSG_OID_MAX_LEN];
+
+  for(i = 0; i < message->pdu.data_length; i++) {
+    /*
+     * Zero is the base oid for compression and decompression
+     */
+    if(i == 0) {
+      continue;
+    }
+
+    /*
+     * Get the first character where the Oid differs from the base (i = 0)
+     */
+    for(k = 0, j = 0; message->pdu.data[0].oid[j] != -1 && message->pdu.data[i].oid[j] != -1; j++) {
+      if(message->pdu.data[i].oid[j] != message->pdu.data[0].oid[j] || k > 0) {
+        if(k == 0) {
+          oid[k++] = j;
+        }
+        oid[k++] = message->pdu.data[i].oid[j];
+      }
+    }
+    /*
+     * Same OID twice in the message
+     * This can happen if the get bulk asks for the last OID in the MIB
+     * The server replies with the last oid and it repeats it to send the End Of MIB
+     */
+    if(k == 0) {
+      oid[k++] = j;
+    }
+    oid[k] = -1;
+
+    comp_oid_copy(message->pdu.data[i].oid, oid);
+  }
+
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
 int
 comp_engine_encode(comp_message_t *message, uint8_t *buffer, uint32_t *buffer_len, uint8_t with_oids)
 {
   uint8_t i, j;
+
+  if(!comp_engine_compress_oids(message)) {
+    return 0;
+  }
 
   *buffer_len = 0;
 
