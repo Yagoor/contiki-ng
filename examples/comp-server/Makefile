@@ -10,7 +10,7 @@ MAKE_MAC = MAKE_MAC_TSCH
 MODULES += os/services/orchestra
 endif
 
-#MODULES += os/services/network-energest
+MODULES += os/services/network-energest
 MODULES += os/net/app-layer/comp
 
 MODULES_REL += ./resources
