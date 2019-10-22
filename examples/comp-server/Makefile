@@ -7,7 +7,6 @@ MAKE_MAC = MAKE_MAC_TSCH
 
 MODULES += os/net/app-layer/comp
 MODULES += os/services/orchestra
-MODULES += os/services/simple-energest
 
 MODULES_REL += ./resources
 

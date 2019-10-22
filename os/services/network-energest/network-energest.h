@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2018, RISE SICS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,39 +28,39 @@
  *
  */
 
-#ifndef PROJECT_CONF_H_
-#define PROJECT_CONF_H_
+/**
+ * \addtogroup lib
+ * @{
+ *
+ * \defgroup network-energest The Simple Energest module
+ * @{
+ */
 
-#ifndef WEBSERVER_CONF_CFS_CONNS
-#define WEBSERVER_CONF_CFS_CONNS 2
-#endif
+ /**
+  * \file
+  *         A process that periodically prints out the time spent in
+  *         radio tx, radio rx, total time and duty cycle.
+  *
+  * \author Simon Duquennoy <simon.duquennoy@ri.se>
+  */
 
-#ifndef BORDER_ROUTER_CONF_WEBSERVER
-#define BORDER_ROUTER_CONF_WEBSERVER 1
-#endif
+#ifndef NETWORK_ENERGEST_H_
+#define NETWORK_ENERGEST_H_
 
-#if BORDER_ROUTER_CONF_WEBSERVER
-#define UIP_CONF_TCP 1
-#endif
+/** \brief The period at which Energest statistics will be logged */
+#ifdef NETWORK_ENERGEST_CONF_PERIOD
+#define NETWORK_ENERGEST_PERIOD NETWORK_ENERGEST_CONF_PERIOD
+#else /* NETWORK_ENERGEST_CONF_PERIOD */
+#define NETWORK_ENERGEST_PERIOD (CLOCK_SECOND * 60)
+#endif /* NETWORK_ENERGEST_CONF_PERIOD */
 
-#define QUEUEBUF_CONF_NUM               16
+/**
+ * Initialize the deployment module
+ */
+void network_energest_init(void);
 
-/* RPL configuration */
-#define RPL_MRHOF_CONF_SQUARED_ETX 1
-#define RPL_CONF_MAX_RANKINC 0
-
-/* TSCH configuration */
-#define ORCHESTRA_CONF_UNICAST_PERIOD 7
-
-/* Five nines reliability paper used the config below */
-#define RPL_CONF_DIO_INTERVAL_MIN 14 /* 2^14 ms = 16.384 s */
-#define RPL_CONF_DIO_INTERVAL_DOUBLINGS 6 /* 2^(14+6) ms = 1048.576 s */
-#define RPL_CONF_PROBING_INTERVAL (60 * CLOCK_SECOND)
-
-/* Five nines reliability paper used the config below */
-#define TSCH_CONF_KEEPALIVE_TIMEOUT (20 * CLOCK_SECOND)
-#define TSCH_CONF_MAX_KEEPALIVE_TIMEOUT (60 * CLOCK_SECOND)
-#define TSCH_CONF_EB_PERIOD (16 * CLOCK_SECOND)
-#define TSCH_CONF_MAX_EB_PERIOD (50 * CLOCK_SECOND)
-
-#endif /* PROJECT_CONF_H_ */
+#endif /* NETWORK_ENERGEST_H_ */
+/**
+ * @}
+ * @}
+ */
