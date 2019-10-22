@@ -31,15 +31,9 @@
 /*---------------------------------------------------------------------------*/
 
 #define LOG_CONF_LEVEL_IPV6     LOG_LEVEL_NONE
-#define LOG_CONF_LEVEL_RPL      LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_RPL      LOG_LEVEL_NONE
 #define LOG_CONF_LEVEL_6LOWPAN  LOG_LEVEL_NONE
 #define LOG_CONF_LEVEL_TCPIP    LOG_LEVEL_NONE
-#define LOG_CONF_LEVEL_MAC      LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_MAC      LOG_LEVEL_NONE
 #define LOG_CONF_LEVEL_FRAMER   LOG_LEVEL_NONE
 #define LOG_CONF_LEVEL_COMP     LOG_LEVEL_NONE
-
-#undef RF2XX_CHANNEL
-#define RF2XX_CHANNEL                     11
-
-#undef IEEE802154_CONF_PANID
-#define IEEE802154_CONF_PANID          0x0011
