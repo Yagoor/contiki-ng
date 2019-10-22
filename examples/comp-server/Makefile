@@ -1,7 +1,9 @@
 CONTIKI_PROJECT = comp-server 
 all: $(CONTIKI_PROJECT)
 
-ifeq ($(findstring $(TARGET),native),)
+TARGET ?= native
+
+ifeq ("$(TARGET)","native")
 MAKE_MAC = MAKE_MAC_CSMA
 else
 MAKE_MAC = MAKE_MAC_TSCH
