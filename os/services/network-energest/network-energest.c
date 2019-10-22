@@ -8,65 +8,54 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "Energest"
-#define LOG_LEVEL LOG_LEVEL_INFO
+#define LOG_LEVEL LOG_LEVEL_NONE
 
-static unsigned long last_tx, last_rx, last_time, last_cpu, last_lpm, last_deep_lpm;
-static unsigned long delta_tx, delta_rx, delta_time, delta_cpu, delta_lpm, delta_deep_lpm;
-static unsigned long curr_tx, curr_rx, curr_time, curr_cpu, curr_lpm, curr_deep_lpm;
 static struct uip_udp_conn *snmp_udp_conn = NULL;
 
 PROCESS(network_energest_process, "Simple Energest");
 /*---------------------------------------------------------------------------*/
-static unsigned long
-to_permil(unsigned long delta_metric, unsigned long delta_time)
-{
-  return (1000ul * (delta_metric)) / delta_time;
-}
-/*---------------------------------------------------------------------------*/
 static void
 network_energest_step(void)
 {
-  static unsigned count = 0;
-static unsigned char packet[512];
-static uint32_t packet_len;
+  static unsigned char packet[512];
+  static uint32_t packet_len;
 
-packet_len = 0;
+  packet_len = 0;
   energest_flush();
 
-  curr_time = ENERGEST_GET_TOTAL_TIME();
-memcpy(packet + packet_len, &curr_time, sizeof(curr_time));
-packet_len += sizeof(curr_time);
+#define ADD_VALUE(name, value) \
+  uint32_t name; \
+  uint32_t name##_real; \
+  name##_real = value; \
+  name = UIP_HTONL(name##_real); \
+  memcpy(packet + packet_len, &name, sizeof(uint32_t)); \
+  packet_len += sizeof(uint32_t); \
 
-  curr_cpu = energest_type_time(ENERGEST_TYPE_CPU);
-  curr_lpm = energest_type_time(ENERGEST_TYPE_LPM);
-  curr_deep_lpm = energest_type_time(ENERGEST_TYPE_DEEP_LPM);
-  curr_tx = energest_type_time(ENERGEST_TYPE_TRANSMIT);
-  curr_rx = energest_type_time(ENERGEST_TYPE_LISTEN);
+  ADD_VALUE(total, ENERGEST_GET_TOTAL_TIME());
 
-  delta_time = curr_time - last_time;
-  delta_cpu = curr_cpu - last_cpu;
-  delta_lpm = curr_lpm - last_lpm;
-  delta_deep_lpm = curr_deep_lpm - last_deep_lpm;
-  delta_tx = curr_tx - last_tx;
-  delta_rx = curr_rx - last_rx;
+  ADD_VALUE(total_cpu, energest_type_time(ENERGEST_TYPE_CPU));
 
-  last_time = curr_time;
-  last_cpu = curr_cpu;
-  last_lpm = curr_lpm;
-  last_deep_lpm = curr_deep_lpm;
-  last_tx = curr_tx;
-  last_rx = curr_rx;
+  ADD_VALUE(total_lpm, energest_type_time(ENERGEST_TYPE_LPM));
 
-uip_udp_packet_sendto(snmp_udp_conn, packet, packet_len, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
+  ADD_VALUE(total_deep_lpm, energest_type_time(ENERGEST_TYPE_DEEP_LPM));
 
-  LOG_INFO("--- Period summary #%u (%lu seconds)\n", count++, delta_time/ENERGEST_SECOND);
-  LOG_INFO("Total time  : %10lu\n", delta_time);
-  LOG_INFO("CPU         : %10lu/%10lu (%lu permil)\n", delta_cpu, delta_time, to_permil(delta_cpu, delta_time));
-  LOG_INFO("LPM         : %10lu/%10lu (%lu permil)\n", delta_lpm, delta_time, to_permil(delta_lpm, delta_time));
-  LOG_INFO("Deep LPM    : %10lu/%10lu (%lu permil)\n", delta_deep_lpm, delta_time, to_permil(delta_deep_lpm, delta_time));
-  LOG_INFO("Radio Tx    : %10lu/%10lu (%lu permil)\n", delta_tx, delta_time, to_permil(delta_tx, delta_time));
-  LOG_INFO("Radio Rx    : %10lu/%10lu (%lu permil)\n", delta_rx, delta_time, to_permil(delta_rx, delta_time));
-  LOG_INFO("Radio total : %10lu/%10lu (%lu permil)\n", delta_tx+delta_rx, delta_time, to_permil(delta_tx+delta_rx, delta_time));
+  ADD_VALUE(total_transmit, energest_type_time(ENERGEST_TYPE_TRANSMIT));
+
+  ADD_VALUE(total_listen, energest_type_time(ENERGEST_TYPE_LISTEN));
+
+  ADD_VALUE(seconds, ENERGEST_SECOND);
+
+  uip_udp_packet_sendto(snmp_udp_conn, packet, packet_len, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
+
+  LOG_INFO("--- Period summary #\n");
+  LOG_INFO("Total time  : %lu\n", (long unsigned int)(total_real));
+  LOG_INFO("CPU         : %lu\n", (long unsigned int)total_cpu_real);
+  LOG_INFO("LPM         : %lu\n", (long unsigned int)total_lpm_real);
+  LOG_INFO("Deep LPM    : %lu\n", (long unsigned int)total_deep_lpm_real);
+  LOG_INFO("Radio Tx    : %lu\n", (long unsigned int)total_transmit_real);
+  LOG_INFO("Radio Rx    : %lu\n", (long unsigned int)total_listen_real);
+  LOG_INFO("Seconds     : %lu\n", (long unsigned int)seconds_real);
+  /* LOG_INFO("Radio total : % 10lu / % 10lu (% lu permil) \ n ", delta_tx + delta_rx, delta_time, to_permil(delta_tx + delta_rx, delta_time)); */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(network_energest_process, ev, data)
@@ -76,14 +65,14 @@ PROCESS_THREAD(network_energest_process, ev, data)
   /* new connection with remote host */
   snmp_udp_conn = udp_new(NULL, 0, NULL);
   udp_bind(snmp_udp_conn, UIP_HTONS(30001));
-  LOG_DBG("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
+  LOG_INFO("Listening on port %u\n", uip_ntohs(snmp_udp_conn->lport));
 
   while(1) {
     PROCESS_YIELD();
 
     if(ev == tcpip_event) {
       if(uip_newdata()) {
-         network_energest_step();
+        network_energest_step();
       }
     }
   } /* while (1) */
@@ -95,13 +84,6 @@ void
 network_energest_init(void)
 {
   energest_flush();
-  last_time = ENERGEST_GET_TOTAL_TIME();
-  last_cpu = energest_type_time(ENERGEST_TYPE_CPU);
-  last_lpm = energest_type_time(ENERGEST_TYPE_LPM);
-  curr_tx = energest_type_time(ENERGEST_TYPE_TRANSMIT);
-  last_deep_lpm = energest_type_time(ENERGEST_TYPE_DEEP_LPM);
-  last_rx = energest_type_time(ENERGEST_TYPE_LISTEN);
   process_start(&network_energest_process, NULL);
 }
-
 /** @} */
