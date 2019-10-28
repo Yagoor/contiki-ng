@@ -2,7 +2,6 @@
 #include "contiki-net.h"
 #include "sys/energest.h"
 #include "network-energest.h"
-#include <stdio.h>
 #include <limits.h>
 
 /* Log configuration */
@@ -12,7 +11,7 @@
 
 static struct uip_udp_conn *snmp_udp_conn = NULL;
 
-PROCESS(network_energest_process, "Simple Energest");
+PROCESS(network_energest_process, "Network Energest");
 /*---------------------------------------------------------------------------*/
 static void
 network_energest_step(void)
@@ -31,6 +30,8 @@ network_energest_step(void)
   memcpy(packet + packet_len, &name, sizeof(uint32_t)); \
   packet_len += sizeof(uint32_t); \
 
+  ADD_VALUE(system, ENERGEST_CURRENT_TIME());
+
   ADD_VALUE(total, ENERGEST_GET_TOTAL_TIME());
 
   ADD_VALUE(total_cpu, energest_type_time(ENERGEST_TYPE_CPU));
@@ -48,6 +49,7 @@ network_energest_step(void)
   uip_udp_packet_sendto(snmp_udp_conn, packet, packet_len, &UIP_IP_BUF->srcipaddr, UIP_UDP_BUF->srcport);
 
   LOG_INFO("--- Period summary #\n");
+  LOG_INFO("System time : %lu\n", (long unsigned int)(system_real));
   LOG_INFO("Total time  : %lu\n", (long unsigned int)(total_real));
   LOG_INFO("CPU         : %lu\n", (long unsigned int)total_cpu_real);
   LOG_INFO("LPM         : %lu\n", (long unsigned int)total_lpm_real);
