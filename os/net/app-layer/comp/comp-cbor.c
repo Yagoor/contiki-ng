@@ -76,9 +76,9 @@ cbor_read_token(uint8_t *data, struct cbor_token *token)
       token->integer |= ((uint64_t)*data) << 32;
       data++;
     case 4:
-      token->integer |= *data << 24;
+      token->integer |= ((uint32_t)*data) << 24;
       data++;
-      token->integer |= *data << 16;
+      token->integer |= ((uint32_t)*data) << 16;
       data++;
     case 2:
       token->integer |= *data << 8;
