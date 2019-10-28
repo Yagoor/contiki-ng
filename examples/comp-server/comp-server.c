@@ -32,9 +32,6 @@
 #include "contiki.h"
 #include "comp-api.h"
 
-#include <string.h>
-#include <strings.h>
-
 /*---------------------------------------------------------------------------*/
 PROCESS_NAME(comp_server_process);
 AUTOSTART_PROCESSES(&comp_server_process);
