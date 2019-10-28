@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Inria.
+* Copyright (c) 2017, Inria.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@
  * @{ */
 
 /** \addtogroup log
- * @{ */
+* @{ */
 
 #ifndef __LOG_CONF_H__
 #define __LOG_CONF_H__

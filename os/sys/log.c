@@ -68,20 +68,20 @@ int curr_log_level_lwm2m = LOG_CONF_LEVEL_LWM2M;
 int curr_log_level_main = LOG_CONF_LEVEL_MAIN;
 
 struct log_module all_modules[] = {
-  { "rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL },
-  { "tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP },
-  { "ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6 },
-  { "6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN },
-  { "nullnet", &curr_log_level_nullnet, LOG_CONF_LEVEL_NULLNET },
-  { "mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC },
-  { "framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER },
-  { "6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP },
-  { "coap", &curr_log_level_coap, LOG_CONF_LEVEL_COAP },
-  { "snmp", &curr_log_level_snmp, LOG_CONF_LEVEL_SNMP },
-  { "comp", &curr_log_level_comp, LOG_CONF_LEVEL_COMP },
-  { "lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M },
-  { "main", &curr_log_level_main, LOG_CONF_LEVEL_MAIN },
-  { NULL, NULL, 0 },
+  {"rpl", &curr_log_level_rpl, LOG_CONF_LEVEL_RPL},
+  {"tcpip", &curr_log_level_tcpip, LOG_CONF_LEVEL_TCPIP},
+  {"ipv6", &curr_log_level_ipv6, LOG_CONF_LEVEL_IPV6},
+  {"6lowpan", &curr_log_level_6lowpan, LOG_CONF_LEVEL_6LOWPAN},
+  {"nullnet", &curr_log_level_nullnet, LOG_CONF_LEVEL_NULLNET},
+  {"mac", &curr_log_level_mac, LOG_CONF_LEVEL_MAC},
+  {"framer", &curr_log_level_framer, LOG_CONF_LEVEL_FRAMER},
+  {"6top", &curr_log_level_6top, LOG_CONF_LEVEL_6TOP},
+  {"coap", &curr_log_level_coap, LOG_CONF_LEVEL_COAP},
+  {"snmp", &curr_log_level_snmp, LOG_CONF_LEVEL_SNMP},
+  {"comp", &curr_log_level_comp, LOG_CONF_LEVEL_COMP},
+  {"lwm2m", &curr_log_level_lwm2m, LOG_CONF_LEVEL_LWM2M},
+  {"main", &curr_log_level_main, LOG_CONF_LEVEL_MAIN},
+  {NULL, NULL, 0},
 };
 
 #if NETSTACK_CONF_WITH_IPV6
@@ -112,7 +112,7 @@ log_6addr_compact_snprint(char *buf, size_t size, const uip_ipaddr_t *ipaddr)
 #if BUILD_WITH_DEPLOYMENT
     return snprintf(buf, size, "%s-%03u", prefix, deployment_id_from_iid(ipaddr));
 #else /* BUILD_WITH_DEPLOYMENT */
-    return snprintf(buf, size, "%s-%04x", prefix, UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t) / 2 - 1]));
+    return snprintf(buf, size, "%s-%04x", prefix, UIP_HTONS(ipaddr->u16[sizeof(uip_ipaddr_t)/2-1]));
 #endif /* BUILD_WITH_DEPLOYMENT */
   }
 }
@@ -153,7 +153,7 @@ log_lladdr_compact(const linkaddr_t *lladdr)
     LOG_OUTPUT("LL-%04u", deployment_id_from_lladdr(lladdr));
 #else /* BUILD_WITH_DEPLOYMENT */
 #if LINKADDR_SIZE == 8
-    LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE / 2 - 1]));
+    LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16[LINKADDR_SIZE/2-1]));
 #elif LINKADDR_SIZE == 2
     LOG_OUTPUT("LL-%04x", UIP_HTONS(lladdr->u16));
 #endif
@@ -196,18 +196,18 @@ const char *
 log_level_to_str(int level)
 {
   switch(level) {
-  case LOG_LEVEL_NONE:
-    return "None";
-  case LOG_LEVEL_ERR:
-    return "Errors";
-  case LOG_LEVEL_WARN:
-    return "Warnings";
-  case LOG_LEVEL_INFO:
-    return "Info";
-  case LOG_LEVEL_DBG:
-    return "Debug";
-  default:
-    return "N/A";
+    case LOG_LEVEL_NONE:
+      return "None";
+    case LOG_LEVEL_ERR:
+      return "Errors";
+    case LOG_LEVEL_WARN:
+      return "Warnings";
+    case LOG_LEVEL_INFO:
+      return "Info";
+    case LOG_LEVEL_DBG:
+      return "Debug";
+    default:
+      return "N/A";
   }
 }
 /** @} */
