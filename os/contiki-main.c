@@ -55,6 +55,7 @@
 #include "services/orchestra/orchestra.h"
 #include "services/shell/serial-shell.h"
 #include "services/simple-energest/simple-energest.h"
+#include "services/network-energest/network-energest.h"
 #include "services/tsch-cs/tsch-cs.h"
 
 #include <stdio.h>
@@ -156,6 +157,10 @@ main(void)
 #if BUILD_WITH_SIMPLE_ENERGEST
   simple_energest_init();
 #endif /* BUILD_WITH_SIMPLE_ENERGEST */
+
+#if BUILD_WITH_NETWORK_ENERGEST
+  network_energest_init();
+#endif /* BUILD_WITH_NETWORK_ENERGEST */
 
 #if BUILD_WITH_TSCH_CS
   /* Initialize the channel selection module */
