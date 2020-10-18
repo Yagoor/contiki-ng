@@ -46,12 +46,19 @@
 
 /*---------------------------------------------------------------------------*/
 void
-snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string)
+snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string, uint32_t string_length)
 {
   memcpy(&varbind->oid, oid, sizeof(snmp_oid_t));
   varbind->value_type = BER_DATA_TYPE_OCTET_STRING;
   varbind->value.string.string = string;
-  varbind->value.string.length = strlen(string);
+  varbind->value.string.length = string_length;
+}
+/*---------------------------------------------------------------------------*/
+void
+snmp_api_get_string(snmp_varbind_t *varbind, const char **string, uint32_t *string_length)
+{
+  *string = varbind->value.string.string;
+  *string_length = varbind->value.string.length;
 }
 /*---------------------------------------------------------------------------*/
 void

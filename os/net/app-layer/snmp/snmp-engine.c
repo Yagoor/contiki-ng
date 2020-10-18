@@ -46,7 +46,10 @@
 
 #define LOG_MODULE "SNMP [engine]"
 #define LOG_LEVEL LOG_LEVEL_SNMP
-
+/*---------------------------------------------------------------------------*/
+/**
+ * @todo This file contains a lot of code that seems repeated. It can be more DRY
+ */
 /*---------------------------------------------------------------------------*/
 static inline int
 snmp_engine_get(snmp_header_t *header, snmp_varbind_t *varbinds)
@@ -57,7 +60,7 @@ snmp_engine_get(snmp_header_t *header, snmp_varbind_t *varbinds)
   i = 0;
   while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
     resource = snmp_mib_find(&varbinds[i].oid);
-    if(!resource) {
+    if(!resource || !resource->read_handler) {
       switch(header->version) {
       case SNMP_VERSION_1:
         header->error_status = SNMP_STATUS_NO_SUCH_NAME;
@@ -74,7 +77,44 @@ snmp_engine_get(snmp_header_t *header, snmp_varbind_t *varbinds)
         header->error_index = 0;
       }
     } else {
-      resource->handler(&varbinds[i], &resource->oid);
+      resource->read_handler(&varbinds[i], &resource->oid);
+    }
+
+    i++;
+  }
+
+  return 0;
+}
+/*---------------------------------------------------------------------------*/
+static inline int
+snmp_engine_set(snmp_header_t *header, snmp_varbind_t *varbinds)
+{
+  snmp_mib_resource_t *resource;
+  uint8_t i;
+
+  i = 0;
+  while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
+    resource = snmp_mib_find(&varbinds[i].oid);
+    if(!resource || !resource->write_handler) {
+      switch(header->version) {
+      case SNMP_VERSION_1:
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
+        /*
+         * Varbinds are 1 indexed
+         */
+        header->error_index = i + 1;
+        break;
+      case SNMP_VERSION_2C:
+        (&varbinds[i])->value_type = BER_DATA_TYPE_NO_SUCH_INSTANCE;
+        break;
+      default:
+        header->error_status = SNMP_STATUS_NO_SUCH_NAME;
+        header->error_index = 0;
+      }
+    } else {
+      if(!resource->write_handler(&varbinds[i])) {
+        return 0;
+      }
     }
 
     i++;
@@ -92,7 +132,7 @@ snmp_engine_get_next(snmp_header_t *header, snmp_varbind_t *varbinds)
   i = 0;
   while(varbinds[i].value_type != BER_DATA_TYPE_EOC && i < SNMP_MAX_NR_VALUES) {
     resource = snmp_mib_find_next(&varbinds[i].oid);
-    if(!resource) {
+    if(!resource || !resource->read_handler) {
       switch(header->version) {
       case SNMP_VERSION_1:
         header->error_status = SNMP_STATUS_NO_SUCH_NAME;
@@ -109,7 +149,7 @@ snmp_engine_get_next(snmp_header_t *header, snmp_varbind_t *varbinds)
         header->error_index = 0;
       }
     } else {
-      resource->handler(&varbinds[i], &resource->oid);
+      resource->read_handler(&varbinds[i], &resource->oid);
     }
 
     i++;
@@ -144,7 +184,7 @@ snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds)
     }
 
     resource = snmp_mib_find_next(&oids[i]);
-    if(!resource) {
+    if(!resource || !resource->read_handler) {
       switch(header->version) {
       case SNMP_VERSION_1:
         header->error_status = SNMP_STATUS_NO_SUCH_NAME;
@@ -162,7 +202,7 @@ snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds)
       }
     } else {
       if(varbinds_length < SNMP_MAX_NR_VALUES) {
-        resource->handler(&varbinds[varbinds_length], &resource->oid);
+        resource->read_handler(&varbinds[varbinds_length], &resource->oid);
         (varbinds_length)++;
       } else {
         return -1;
@@ -174,7 +214,7 @@ snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds)
     repeater = 0;
     for(j = header->non_repeaters; j < original_varbinds_length; j++) {
       resource = snmp_mib_find_next(&oids[j]);
-      if(!resource) {
+      if(!resource || !resource->read_handler) {
         switch(header->version) {
         case SNMP_VERSION_1:
           header->error_status = SNMP_STATUS_NO_SUCH_NAME;
@@ -198,7 +238,7 @@ snmp_engine_get_bulk(snmp_header_t *header, snmp_varbind_t *varbinds)
         }
       } else {
         if(varbinds_length < SNMP_MAX_NR_VALUES) {
-          resource->handler(&varbinds[varbinds_length], &resource->oid);
+          resource->read_handler(&varbinds[varbinds_length], &resource->oid);
           (varbinds_length)++;
           memcpy(&oids[j], &resource->oid, sizeof(snmp_oid_t));
           repeater++;
@@ -228,6 +268,18 @@ snmp_engine(snmp_packet_t *snmp_packet)
     return 0;
   }
 
+  /*
+   * Handle the version
+   */
+  switch(header.version) {
+  case SNMP_VERSION_1:
+  case SNMP_VERSION_2C:
+    break;
+  default:
+    LOG_DBG("Invalid version\n");
+    return 0;
+  }
+
   if(header.version != SNMP_VERSION_1) {
     if(strncmp(header.community.community, SNMP_COMMUNITY, header.community.length)) {
       LOG_ERR("Request with invalid community\n");
@@ -236,7 +288,7 @@ snmp_engine(snmp_packet_t *snmp_packet)
   }
 
   /*
-   * Now handle the SNMP requests depending on their type
+   * Handle the SNMP requests depending on their type
    */
   switch(header.pdu_type) {
   case BER_DATA_TYPE_PDU_GET_REQUEST:
@@ -250,6 +302,20 @@ snmp_engine(snmp_packet_t *snmp_packet)
       return 0;
     }
     break;
+
+  /** Get response is only handled by the client */
+  case BER_DATA_TYPE_PDU_GET_RESPONSE:
+    return 0;
+
+  case BER_DATA_TYPE_PDU_SET_REQUEST:
+    if(snmp_engine_set(&header, varbinds) == -1) {
+      return 0;
+    }
+    break;
+
+  /** @todo Add TRAP support */
+  case BER_DATA_TYPE_PDU_TRAP:
+    return 0;
 
   case BER_DATA_TYPE_PDU_GET_BULK:
     if(snmp_engine_get_bulk(&header, varbinds) == -1) {

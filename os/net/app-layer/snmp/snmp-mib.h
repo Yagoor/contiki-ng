@@ -67,7 +67,15 @@
  * @param varbind The varbind that is being changed
  * @param oid The oid from the resource
  */
-typedef void (*snmp_mib_resource_handler_t)(snmp_varbind_t *varbind, snmp_oid_t *oid);
+typedef void (*snmp_mib_resource_read_handler_t)(snmp_varbind_t *varbind, snmp_oid_t *oid);
+
+/**
+ * @brief The MIB resource handler typedef
+ *
+ * @param varbind The varbind that is being changed
+ * @return 1 for success and 0 for error
+ */
+typedef int (*snmp_mib_resource_write_handler_t)(snmp_varbind_t *varbind);
 
 /**
  * @brief The MIB Resource struct
@@ -84,10 +92,32 @@ typedef struct snmp_mib_resource_s {
    */
   snmp_oid_t oid;
   /**
-   * @brief The function handler that is called for this resource
+   * @brief The function read handler that is called for this resource
    */
-  snmp_mib_resource_handler_t handler;
+  snmp_mib_resource_read_handler_t read_handler;
+  /**
+   * @brief The function write handler that is called for this resource
+   */
+  snmp_mib_resource_write_handler_t write_handler;
 } snmp_mib_resource_t;
+
+/**
+ * @brief Declare a MIB resource
+ *
+ * @param name A name for the MIB resource
+ * @param handler The handler function for this resource
+ * @param ... The OID (comma-separated)
+ */
+#define SNMP_MIB_RESOURCE(_name, _read_handler, _write_handler, ...) \
+  snmp_mib_resource_t _name = { \
+    .next = NULL, \
+    .oid = { \
+      .data = __VA_ARGS__, \
+      .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
+    }, \
+    .read_handler = _read_handler, \
+    .write_handler = _write_handler \
+  };
 
 /**
  * @brief Finds the MIB Resource for this OID

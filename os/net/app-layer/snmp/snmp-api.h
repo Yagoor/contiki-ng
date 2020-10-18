@@ -76,28 +76,52 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
  * @param name A name for the oid
  * @param ... The Oid (comma-separeted)
  */
-#define OID(name, ...) \
-  static snmp_oid_t name = { \
+#define OID(_name, ...) \
+  static snmp_oid_t _name = { \
     .data = __VA_ARGS__, \
     .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
   };
 
 /**
- * @brief Declare a MIB resource
+ * @brief Declare a read-write MIB resource
  *
  * @param name A name for the MIB resource
  * @param handler The handler function for this resource
  * @param ... The OID (comma-separated)
  */
-#define MIB_RESOURCE(name, handler, ...) \
-  snmp_mib_resource_t name = { \
-    NULL, \
-    { \
-      .data = __VA_ARGS__, \
-      .length = (sizeof((uint32_t[]){ __VA_ARGS__ }) / sizeof(uint32_t)) \
-    }, \
-    handler \
-  };
+#define MIB_READ_WRITE_RESOURCE(name, _read_handler, _write_handler, ...) \
+  SNMP_MIB_RESOURCE(name, _read_handler, _write_handler, ##__VA_ARGS__)
+
+/**
+ * @brief Declare a read-only MIB resource
+ *
+ * @param name A name for the MIB resource
+ * @param handler The handler function for this resource
+ * @param ... The OID (comma-separated)
+ */
+#define MIB_READ_RESOURCE(name, _read_handler, ...) \
+  MIB_READ_WRITE_RESOURCE(name, _read_handler, NULL, ##__VA_ARGS__)
+
+/**
+ * @brief Declare a write-only MIB resource
+ *
+ * @param name A name for the MIB resource
+ * @param handler The handler function for this resource
+ * @param ... The OID (comma-separated)
+ */
+#define MIB_WRITE_RESOURCE(name, _write_handler, ...) \
+  MIB_READ_WRITE_RESOURCE(name, NULL, _write_handler, ##__VA_ARGS__)
+
+/**
+ * @brief Declare a MIB resource
+ * @remarks For legacy reasons this declares a read-only MIB
+ *
+ * @param name A name for the MIB resource
+ * @param handler The handler function for this resource
+ * @param ... The OID (comma-separated)
+ */
+#define MIB_RESOURCE(name, _read_handler, ...) \
+  MIB_READ_RESOURCE(name, _read_handler, ##__VA_ARGS__)
 
 /**
  * @brief Function to set a varbind with a string
@@ -107,9 +131,20 @@ typedef struct snmp_mib_resource_s snmp_mib_resource_t;
  * @param varbind The varbind from the handler
  * @param oid The oid from the handler
  * @param string The string
+ * @param string_length The string length
  */
 void
-snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string);
+snmp_api_set_string(snmp_varbind_t *varbind, snmp_oid_t *oid, char *string, uint32_t string_length);
+
+/**
+ * @brief
+ *
+ * @param varbind
+ * @param string
+ * @param string_length
+ */
+void
+snmp_api_get_string(snmp_varbind_t *varbind, const char **string, uint32_t *string_length);
 
 /**
  * @brief Function to set a varbind with a time tick

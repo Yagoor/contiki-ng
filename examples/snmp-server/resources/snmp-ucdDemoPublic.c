@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,33 +28,52 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*---------------------------------------------------------------------------*/
-#include "contiki.h"
+
 #include "snmp-api.h"
 
 /*---------------------------------------------------------------------------*/
-PROCESS_NAME(snmp_server_process);
-AUTOSTART_PROCESSES(&snmp_server_process);
+#define UCDDEMOPUBLICSTRINGSTR      "BeforeSet"
+#define UCDDEMOPUBLICSTRINGSTRMAX   64
+static char ucdDemoPublicStringStr[UCDDEMOPUBLICSTRINGSTRMAX];
+static uint32_t ucdDemoPublicStringLength;
 /*---------------------------------------------------------------------------*/
+static void
+ucdDemoPublicString_read_handler(snmp_varbind_t *varbind, snmp_oid_t *oid);
+static int
+ucdDemoPublicString_write_handler(snmp_varbind_t *varbind);
 
-extern void SNMP_MIB_2_System_Init();
+MIB_READ_WRITE_RESOURCE(ucdDemoPublicString, ucdDemoPublicString_read_handler, ucdDemoPublicString_write_handler, 1, 3, 6, 1, 4, 1, 2021, 14, 1, 1, 2, 0);
 
-extern void ucdDemoPublic_init();
-
-/*---------------------------------------------------------------------------*/
-
-PROCESS(snmp_server_process, "SNMP Server");
-
-/*---------------------------------------------------------------------------*/
-PROCESS_THREAD(snmp_server_process, ev, data)
+static void
+ucdDemoPublicString_read_handler(snmp_varbind_t *varbind, snmp_oid_t *oid)
 {
+  snmp_api_set_string(varbind, oid, ucdDemoPublicStringStr, ucdDemoPublicStringLength);
+}
+static int
+ucdDemoPublicString_write_handler(snmp_varbind_t *varbind)
+{
+  const char *string;
+  uint32_t string_length;
 
-  PROCESS_BEGIN();
+  snmp_api_get_string(varbind, &string, &string_length);
 
-  SNMP_MIB_2_System_Init();
+  if(string_length > UCDDEMOPUBLICSTRINGSTRMAX) {
+    return 0;
+  }
 
-  ucdDemoPublic_init();
+  memcpy(ucdDemoPublicStringStr, string, string_length);
+  ucdDemoPublicStringLength = string_length;
 
-  PROCESS_END();
+  return 1;
+}
+/*---------------------------------------------------------------------------*/
+void
+ucdDemoPublic_init()
+{
+  memset(ucdDemoPublicStringStr, 0, UCDDEMOPUBLICSTRINGSTRMAX);
+  strcpy(ucdDemoPublicStringStr, UCDDEMOPUBLICSTRINGSTR);
+  ucdDemoPublicStringLength = strlen(UCDDEMOPUBLICSTRINGSTR);
+
+  snmp_api_add_resource(&ucdDemoPublicString);
 }
 /*---------------------------------------------------------------------------*/

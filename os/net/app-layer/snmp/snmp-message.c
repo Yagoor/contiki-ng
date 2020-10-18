@@ -210,15 +210,6 @@ snmp_message_decode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varb
     return 0;
   }
 
-  switch(header->version) {
-  case SNMP_VERSION_1:
-  case SNMP_VERSION_2C:
-    break;
-  default:
-    LOG_DBG("Invalid version\n");
-    return 0;
-  }
-
   if(!snmp_ber_decode_string_len_buffer(snmp_packet, &header->community.community, &header->community.length)) {
     LOG_DBG("Could not decode community\n");
     return 0;
@@ -226,18 +217,6 @@ snmp_message_decode(snmp_packet_t *snmp_packet, snmp_header_t *header, snmp_varb
 
   if(!snmp_ber_decode_type(snmp_packet, &header->pdu_type)) {
     LOG_DBG("Could not decode pdu type\n");
-    return 0;
-  }
-
-  switch(header->pdu_type) {
-  case BER_DATA_TYPE_PDU_GET_REQUEST:
-  case BER_DATA_TYPE_PDU_GET_NEXT_REQUEST:
-  case BER_DATA_TYPE_PDU_GET_RESPONSE:
-  case BER_DATA_TYPE_PDU_SET_REQUEST:
-  case BER_DATA_TYPE_PDU_GET_BULK:
-    break;
-  default:
-    LOG_DBG("Invalid version\n");
     return 0;
   }
 
