@@ -52,14 +52,15 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
 # Use get-pip to install pip instead of using package manager
 # Install pip 21.0.1 to avoid warning introduced in 21.1
 # https://pip.pypa.io/en/stable/news/#v21-1
-RUN apt-get update \
-    && apt-get install -y software-properties-common \
+RUN apt-get -qq update \
+    && apt-get -qq install -y software-properties-common > /dev/null \
     && add-apt-repository -y ppa:deadsnakes/ppa \
-    && apt-get purge --auto-remove -y python3.6 \
-    && apt-get update \
-    && apt-get install -y \
+    && apt-get -qq purge --auto-remove -y python3.6 > /dev/null \
+    && apt-get -qq update \
+    && apt-get -qq install -y \
         python3.9-dev \
         python3.9-distutils \
+        > /dev/null \
     && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
     && wget -nv https://bootstrap.pypa.io/pip/3.5/get-pip.py \
     && python3 get-pip.py pip==21.0.1 \
@@ -120,7 +121,8 @@ RUN pip3 -q install \
       sphinx_rtd_theme \
       sphinx \
       matplotlib \
-      nrfutil
+      nrfutil \
+      pyserial 
 # Create user, enable X forwarding, add to group dialout
 # -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
 RUN export uid=1000 gid=1000 && \
