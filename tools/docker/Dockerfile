@@ -9,6 +9,26 @@ USER root
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install gnupg > /dev/null
 
+# This must be ran before installing other programs.
+# They might install python3 from package manager which is python3.6
+# Install python3.9 from deadsnakes
+# Use get-pip to install pip instead of using package manager
+# Install pip 21.0.1 to avoid warning introduced in 21.1
+# https://pip.pypa.io/en/stable/news/#v21-1
+RUN apt-get -qq update \
+    && apt-get -qq install -y software-properties-common > /dev/null \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get -qq update \
+    && apt-get -qq install -y \
+        wget \
+        python3.9-dev \
+        python3.9-distutils \
+        > /dev/null \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+    && wget -nv https://bootstrap.pypa.io/pip/3.5/get-pip.py \
+    && python3 get-pip.py pip==21.0.1 \
+    && rm get-pip.py
+
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   echo "deb http://download.mono-project.com/repo/ubuntu bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 77B7346A59027B33C10CAFE35E64E954262C4500 && \
@@ -41,30 +61,10 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
     unzip \
     libusb-1.0-0 \
     valgrind \
-    wget \
     smitools \
     snmp \
     snmp-mibs-downloader \
     > /dev/null
-
-# Remove default python3 which in ubuntu:18.04 is python 3.6
-# Install python3.9 from deadsnakes
-# Use get-pip to install pip instead of using package manager
-# Install pip 21.0.1 to avoid warning introduced in 21.1
-# https://pip.pypa.io/en/stable/news/#v21-1
-RUN apt-get -qq update \
-    && apt-get -qq install -y software-properties-common > /dev/null \
-    && add-apt-repository -y ppa:deadsnakes/ppa \
-    && apt-get -qq purge --auto-remove -y python3.6 > /dev/null \
-    && apt-get -qq update \
-    && apt-get -qq install -y \
-        python3.9-dev \
-        python3.9-distutils \
-        > /dev/null \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
-    && wget -nv https://bootstrap.pypa.io/pip/3.5/get-pip.py \
-    && python3 get-pip.py pip==21.0.1 \
-    && rm get-pip.py
 
 # Clean up
 RUN apt-get -qq clean
