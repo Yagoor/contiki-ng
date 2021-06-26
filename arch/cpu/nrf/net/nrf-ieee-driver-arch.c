@@ -240,18 +240,18 @@ static uint8_t
 radio_rssi_sample_get(void)
 {
   uint8_t rssi_sample;
-  uint8_t temp;
+  // uint8_t temp;
 
   rssi_sample = nrf_radio_rssi_sample_get(NRF_RADIO);
 
-  if(nrf53_errata_87()) {
-    temp = nrf_temp_result_get(NRF_TEMP);
-    return (uint8_t)round(
-      (float)((float)(1.56f * rssi_sample) + (float)(4.9e-5 * pow(rssi_sample, 3)) -
-              (float)(9.9e-3 * pow(rssi_sample, 2)) - (0.05f * ((float)(temp) * 0.25f)) - 7.2f));
-  } else {
+  // if(nrf53_errata_87()) {
+  //   temp = nrf_temp_result_get(NRF_TEMP);
+  //   return (uint8_t)round(
+  //     (float)((float)(1.56f * rssi_sample) + (float)(4.9e-5 * pow(rssi_sample, 3)) -
+  //             (float)(9.9e-3 * pow(rssi_sample, 2)) - (0.05f * ((float)(temp) * 0.25f)) - 7.2f));
+  // } else {
     return rssi_sample;
-  }
+  // }
 }
 /*---------------------------------------------------------------------------*/
 static uint8_t
